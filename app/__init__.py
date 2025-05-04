@@ -1,10 +1,13 @@
+import os
 from flask import Flask, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user
-import os
+import sys
 import datetime
+import traceback
+import importlib
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -14,6 +17,10 @@ login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access this page'
 login_manager.login_message_category = 'warning'
+
+# plugins_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'plugins')
+# if plugins_path not in sys.path:
+#     sys.path.insert(0, plugins_path)
 
 def create_app():
     """Application factory pattern for Flask app creation"""
@@ -107,7 +114,30 @@ def create_app():
             Role.insert_default_roles()
         except Exception as e:
             app.logger.error(f"Error inserting default roles: {str(e)}")
-        
+        # # Debug plugin discovery
+        # try:
+        #     from sqlalchemy import inspect
+        #     inspector = inspect(db.engine)
+        #     app.logger.info(f"Available tables: {inspector.get_table_names()}")
+            
+        #     # Check if plugins table exists
+        #     if 'plugins' in inspector.get_table_names():
+        #         app.logger.info("Plugins table exists in database")
+                
+        #         # Check if paths are correct
+        #         import os
+        #         project_root = os.path.dirname(os.path.dirname(__file__))
+        #         plugins_dir = os.path.join(project_root, 'plugins')
+        #         app.logger.info(f"Project root: {project_root}")
+        #         app.logger.info(f"Plugins directory: {plugins_dir}")
+        #         app.logger.info(f"Plugins directory exists: {os.path.exists(plugins_dir)}")
+                
+        #         if os.path.exists(plugins_dir):
+        #             app.logger.info(f"Plugins directory contents: {os.listdir(plugins_dir)}")
+        #     else:
+        #         app.logger.warning("Plugins table does not exist in database")
+        # except Exception as e:
+        #     app.logger.error(f"Error debugging plugin discovery: {str(e)}")
         # Initialize plugin manager - but only after checking if tables exist
         try:
             from sqlalchemy import inspect
