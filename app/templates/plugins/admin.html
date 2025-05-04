@@ -14,7 +14,7 @@
         </svg>
         Back to Plugins
     </a>
-    <form method="post" action="{{ url_for('plugins.discover') }}">
+    <form method="post" action="{{ url_for('plugins.discover') }}" class="d-inline">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -77,18 +77,24 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if plugin.is_system %}
-                                    <span class="badge bg-green">Yes</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">No</span>
-                                    {% endif %}
+                                    <form method="post" action="{{ url_for('plugins.toggle_system', slug=plugin.slug) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input toggle-system" type="checkbox" 
+                                                   {% if plugin.is_system %}checked{% endif %}
+                                                   data-plugin-slug="{{ plugin.slug }}">
+                                        </div>
+                                    </form>
                                 </td>
                                 <td>
-                                    {% if plugin.enabled_for_all %}
-                                    <span class="badge bg-green">Yes</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">No</span>
-                                    {% endif %}
+                                    <form method="post" action="{{ url_for('plugins.toggle_enabled_for_all', slug=plugin.slug) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input toggle-enabled-for-all" type="checkbox" 
+                                                   {% if plugin.enabled_for_all %}checked{% endif %}
+                                                   data-plugin-slug="{{ plugin.slug }}">
+                                        </div>
+                                    </form>
                                 </td>
                                 <td>
                                     <div class="btn-list flex-nowrap">
@@ -102,7 +108,7 @@
                                         </a>
                                         
                                         {% if plugin.status == 'inactive' or plugin.status == 'error' %}
-                                        <form action="{{ url_for('plugins.activate', slug=plugin.slug) }}" method="post">
+                                        <form action="{{ url_for('plugins.activate', slug=plugin.slug) }}" method="post" class="activate-form">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-sm btn-success">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -113,7 +119,7 @@
                                             </button>
                                         </form>
                                         {% elif plugin.status == 'active' %}
-                                        <form action="{{ url_for('plugins.deactivate', slug=plugin.slug) }}" method="post">
+                                        <form action="{{ url_for('plugins.deactivate', slug=plugin.slug) }}" method="post" class="deactivate-form">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-sm btn-warning">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -125,6 +131,15 @@
                                             </button>
                                         </form>
                                         {% endif %}
+                                        
+                                        <a href="{{ url_for('plugins.assign_tenants', slug=plugin.slug) }}" class="btn btn-sm btn-outline-secondary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M9 11l3 3l8 -8"></path>
+                                                <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9"></path>
+                                            </svg>
+                                            Assign Tenants
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -170,4 +185,46 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle activation forms
+        document.querySelectorAll('.activate-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (confirm('Are you sure you want to activate this plugin?')) {
+                    this.submit();
+                }
+            });
+        });
+        
+        // Handle deactivation forms
+        document.querySelectorAll('.deactivate-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (confirm('Are you sure you want to deactivate this plugin?')) {
+                    this.submit();
+                }
+            });
+        });
+        
+        // Handle system plugin toggle
+        document.querySelectorAll('.toggle-system').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const form = this.closest('form');
+                form.submit();
+            });
+        });
+        
+        // Handle enabled for all toggle
+        document.querySelectorAll('.toggle-enabled-for-all').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const form = this.closest('form');
+                form.submit();
+            });
+        });
+    });
+</script>
 {% endblock %}

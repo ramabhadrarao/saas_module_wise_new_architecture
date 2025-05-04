@@ -30,7 +30,7 @@
                     
                     <div class="mb-3">
                         <label class="form-check form-switch">
-                            <input type="checkbox" name="enabled_for_all" class="form-check-input" {% if plugin.enabled_for_all %}checked{% endif %}>
+                            <input type="checkbox" name="enabled_for_all" class="form-check-input" id="enabledForAll" {% if plugin.enabled_for_all %}checked{% endif %}>
                             <span class="form-check-label">Enable for all tenants</span>
                         </label>
                         <div class="form-hint">When enabled, this plugin will be available to all tenants without explicit assignment</div>
@@ -42,7 +42,7 @@
                             {% for tenant in tenants %}
                             <label class="form-selectgroup-item flex-fill">
                                 <input type="checkbox" name="tenant_ids" value="{{ tenant.id }}" class="form-selectgroup-input" 
-                                       {% if tenant.id in enabled_tenant_ids %}checked{% endif %}>
+                                       {% if tenant.id|string in enabled_tenant_ids %}checked{% endif %}>
                                 <div class="form-selectgroup-label d-flex align-items-center p-3">
                                     <div class="me-3">
                                         <span class="form-selectgroup-check"></span>
@@ -70,16 +70,18 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const enabledForAll = document.querySelector('input[name="enabled_for_all"]');
+        const enabledForAll = document.getElementById('enabledForAll');
         const tenantList = document.getElementById('tenantList');
         
-        enabledForAll.addEventListener('change', function() {
-            if (this.checked) {
-                tenantList.style.display = 'none';
-            } else {
-                tenantList.style.display = 'block';
-            }
-        });
+        if (enabledForAll && tenantList) {
+            enabledForAll.addEventListener('change', function() {
+                if (this.checked) {
+                    tenantList.style.display = 'none';
+                } else {
+                    tenantList.style.display = 'block';
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

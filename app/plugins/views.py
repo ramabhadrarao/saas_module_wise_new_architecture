@@ -7,7 +7,7 @@ from app.auth.rbac import permission_required, system_admin_required
 from app.tenant.middleware import tenant_required, get_current_tenant
 import logging
 import json
-
+from flask_login import current_user
 logger = logging.getLogger(__name__)
 
 # Create blueprint
@@ -123,7 +123,7 @@ def view(slug):
                           tenants=tenants,
                           enabled_tenant_ids=enabled_tenant_ids,
                           plugin_debug=plugin_debug)
-                          
+
 @plugin_bp.route('/<slug>/assign-tenants', methods=['GET', 'POST'])
 @system_admin_required
 def assign_tenants(slug):
@@ -398,3 +398,49 @@ def logs():
                           title='Plugin Logs',
                           logs=logs,
                           tenant=tenant)
+
+@plugin_bp.route('/<slug>/toggle-system', methods=['POST'])
+@system_admin_required
+def toggle_system(slug):
+    """Toggle system plugin status"""
+    plugin = Plugin.query.filter_by(slug=slug).first()
+    if not plugin:
+        flash(f"Plugin '{slug}' not found", 'warning')
+        return redirect(url_for('plugins.admin'))
+    
+    try:
+        # Toggle is_system flag
+        plugin.is_system = not plugin.is_system
+        db.session.commit()
+        
+        flash(f"Plugin '{plugin.name}' is now {'a system' if plugin.is_system else 'not a system'} plugin", 'success')
+        return redirect(url_for('plugins.admin'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error toggling system status: {str(e)}")
+        flash(f"Failed to update plugin system status: {str(e)}", 'danger')
+        return redirect(url_for('plugins.admin'))
+
+@plugin_bp.route('/<slug>/toggle-enabled-for-all', methods=['POST'])
+@system_admin_required
+def toggle_enabled_for_all(slug):
+    """Toggle enabled for all tenants status"""
+    plugin = Plugin.query.filter_by(slug=slug).first()
+    if not plugin:
+        flash(f"Plugin '{slug}' not found", 'warning')
+        return redirect(url_for('plugins.admin'))
+    
+    try:
+        # Toggle enabled_for_all flag
+        plugin.enabled_for_all = not plugin.enabled_for_all
+        db.session.commit()
+        
+        flash(f"Plugin '{plugin.name}' is now {'enabled for all tenants' if plugin.enabled_for_all else 'not enabled for all tenants'}", 'success')
+        return redirect(url_for('plugins.admin'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error toggling enabled for all status: {str(e)}")
+        flash(f"Failed to update plugin enabled for all status: {str(e)}", 'danger')
+        return redirect(url_for('plugins.admin'))

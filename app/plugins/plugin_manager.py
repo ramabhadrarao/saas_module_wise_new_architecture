@@ -144,6 +144,7 @@ class PluginManager:
         
         # Discover plugin modules
         discovered = []
+        # Rest of the function remains the same...
         for item in os.listdir(plugins_dir):
             item_path = os.path.join(plugins_dir, item)
             
@@ -153,6 +154,7 @@ class PluginManager:
                     logger.info(f"Found potential plugin package: {item}")
                     
                     # Try to import the plugin package
+                    # Fix: Use proper import name - the directory name should be the import name
                     plugin_module = importlib.import_module(item)
                     
                     # Check if it has a setup function
@@ -193,7 +195,7 @@ class PluginManager:
         
         # Reload plugins from the database
         self._load_all_plugins()
-    
+
         logger.info(f"Discovered {len(discovered)} plugins")
         return discovered
     # def activate_plugin(self, plugin_slug):
@@ -244,20 +246,35 @@ class PluginManager:
 
     def deactivate_plugin(self, plugin_slug):
         """Deactivate a plugin"""
-        plugin = self.plugins.get(plugin_slug)
+        plugin = Plugin.query.filter_by(slug=plugin_slug).first()
         if not plugin:
             logger.error(f"Plugin {plugin_slug} not found")
             return False
         
-        plugin.status = PluginStatus.INACTIVE.value
-        db.session.commit()
-        logger.info(f"Deactivated plugin: {plugin.name}")
-        
-        # Remove any instances
-        if plugin_slug in self.plugin_instances:
-            del self.plugin_instances[plugin_slug]
-        
-        return True
+        try:
+            plugin.status = PluginStatus.INACTIVE.value
+            db.session.commit()
+            
+            # Reload plugin and verify status
+            db.session.refresh(plugin)
+            if plugin.status != PluginStatus.INACTIVE.value:
+                logger.error(f"Failed to update plugin status. Expected {PluginStatus.INACTIVE.value}, got {plugin.status}")
+                return False
+                
+            logger.info(f"Deactivated plugin: {plugin.name}")
+            
+            # Remove any instances
+            if plugin_slug in self.plugin_instances:
+                del self.plugin_instances[plugin_slug]
+            
+            # Update the cached plugin
+            self.plugins[plugin_slug] = plugin
+            
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error deactivating plugin {plugin_slug}: {str(e)}")
+            return False
     
     # def get_plugin_instance(self, plugin_slug, tenant_id=None):
     #     """Get an instance of the plugin for a specific tenant"""

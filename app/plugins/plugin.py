@@ -57,12 +57,25 @@ class Plugin(BaseModel):
     def load(self):
         """Load the plugin module"""
         try:
+            # Ensure the plugins directory is in the path
+            plugins_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'plugins')
+            if plugins_dir not in sys.path:
+                sys.path.insert(0, plugins_dir)
+                logger.info(f"Added plugins directory to sys.path in load(): {plugins_dir}")
+                
+            # Log detailed import information for debugging
+            logger.info(f"Attempting to import module: {self.module_path}")
+            logger.info(f"Module attribute: {self.module_attr}")
+            logger.info(f"Current sys.path: {sys.path}")
+            
             # Import the module
             module = importlib.import_module(self.module_path)
             
             # Get the plugin object/function
             if hasattr(module, self.module_attr):
-                return getattr(module, self.module_attr)
+                plugin_class = getattr(module, self.module_attr)
+                logger.info(f"Successfully loaded plugin: {self.name}")
+                return plugin_class
             else:
                 logger.error(f"Plugin {self.name} doesn't have {self.module_attr} attribute")
                 self.status = PluginStatus.ERROR.value
