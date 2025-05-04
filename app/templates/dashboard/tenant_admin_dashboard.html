@@ -103,8 +103,7 @@
                 
                 <div class="mb-3">
                     {% set storage_percentage = tenant_usage.storage_percentage %}
-                    <label class="form-label">Storage ({{ tenant.usage.storage_mb }} / {{ tenant.max_storage_mb }} MB)</label>
-                    <div class="progress mb-2">
+                    <label class="form-label">Storage ({{ tenant_usage.storage_mb }} / {{ tenant.max_storage_mb }} MB)</label>                    <div class="progress mb-2">
                         <div class="progress-bar bg-blue" style="width: {{ storage_percentage }}%" role="progressbar" aria-valuenow="{{ storage_percentage }}" aria-valuemin="0" aria-valuemax="100">
                             <span class="visually-hidden">{{ storage_percentage }}% used</span>
                         </div>
