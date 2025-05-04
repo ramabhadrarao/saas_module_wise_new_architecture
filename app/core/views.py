@@ -60,7 +60,14 @@ def index():
         # Tenant admin dashboard
         tenant = current_user.tenant
         tenant_users = User.query.filter_by(tenant_id=tenant.id).all() if tenant else []
-        
+        # Create a usage dictionary for the tenant
+        from app.tenant.quota import QuotaManager, ResourceType
+        tenant_usage = {
+            'users': len(tenant_users),
+            'users_percentage': int((len(tenant_users) / tenant.max_users * 100) if tenant.max_users > 0 else 0),
+            'storage_mb': QuotaManager.get_usage(tenant, ResourceType.STORAGE),
+            'storage_percentage': QuotaManager.get_usage_percentage(tenant, ResourceType.STORAGE)
+        }
         # Get tenant plugins if plugin module is available
         tenant_plugins = []
         try:
@@ -85,7 +92,8 @@ def index():
                               title='Tenant Admin Dashboard',
                               tenant=tenant,
                               users=tenant_users,
-                              tenant_plugins=tenant_plugins)
+                              tenant_plugins=tenant_plugins,
+                              tenant_usage=tenant_usage)
     
     else:
         # Regular user dashboard
