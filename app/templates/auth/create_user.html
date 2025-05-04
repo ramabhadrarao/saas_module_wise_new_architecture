@@ -1,0 +1,134 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Create User{% endblock %}
+
+{% block page_title %}Create User{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('auth.users') }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Users
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Create New User</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('auth.create_user') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" placeholder="First name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" placeholder="Last name">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control" placeholder="confirm password" required>
+                    </div>
+                    
+                    {% if current_user.is_system_admin %}
+                    <div class="mb-3">
+                        <label class="form-label">Tenant</label>
+                        <select name="tenant_id" class="form-select">
+                            <option value="">-- None --</option>
+                            {% for tenant in tenants %}
+                            <option value="{{ tenant.id }}">{{ tenant.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Roles</label>
+                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                            {% for role in roles %}
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="checkbox" name="roles" value="{{ role.id }}" class="form-selectgroup-input">
+                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                    <div class="me-3">
+                                        <span class="form-selectgroup-check"></span>
+                                    </div>
+                                    <div>
+                                        <span class="form-selectgroup-title strong mb-1">{{ role.name }}</span>
+                                        <span class="d-block text-muted">{{ role.description }}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_active" class="form-check-input" checked>
+                            <span class="form-check-label">Active</span>
+                        </label>
+                    </div>
+                    
+                    {% if current_user.is_tenant_admin or current_user.is_system_admin %}
+                    <div class="mb-3">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_tenant_admin" class="form-check-input">
+                            <span class="form-check-label">Tenant Administrator</span>
+                        </label>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.is_system_admin %}
+                    <div class="mb-3">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_system_admin" class="form-check-input">
+                            <span class="form-check-label">System Administrator</span>
+                        </label>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-footer">
+                        <div class="row">
+                            <div class="col">
+                                <a href="{{ url_for('auth.users') }}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                            <div class="col text-end">
+                                <button type="submit" class="btn btn-primary">Create User</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

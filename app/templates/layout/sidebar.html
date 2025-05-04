@@ -1,0 +1,84 @@
+<aside class="navbar navbar-vertical navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <h1 class="navbar-brand navbar-brand-autodark">
+            <a href="{{ url_for('main.index') }}">
+                {{ config.APP_NAME }}
+            </a>
+        </h1>
+        
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+            <ul class="navbar-nav pt-lg-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main.index') }}">
+                        <span class="nav-link-icon">
+                            <!-- Dashboard icon SVG here -->
+                        </span>
+                        <span class="nav-link-title">
+                            Dashboard
+                        </span>
+                    </a>
+                </li>
+                
+                <!-- Tenant management - visible to admins only -->
+                {% if current_user.is_system_admin or current_user.is_tenant_admin %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#navbar-tenant" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+                        <span class="nav-link-icon">
+                            <!-- Tenant icon SVG here -->
+                        </span>
+                        <span class="nav-link-title">
+                            Tenants
+                        </span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('tenant.index') }}">Tenant List</a>
+                        {% if current_user.is_system_admin %}
+                        <a class="dropdown-item" href="{{ url_for('tenant.create') }}">Create Tenant</a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endif %}
+                
+<!-- User management - visible based on permissions -->
+{% if current_user.is_authenticated and (current_user.has_permission('view_users') or current_user.is_tenant_admin or current_user.is_system_admin) %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#navbar-users" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+        <span class="nav-link-icon">
+            <!-- Users icon SVG here -->
+        </span>
+        <span class="nav-link-title">
+            Users
+        </span>
+    </a>
+    <div class="dropdown-menu">
+        <a class="dropdown-item" href="{{ url_for('auth.users') }}">User List</a>
+        {% if current_user.has_permission('create_user') %}
+        <a class="dropdown-item" href="{{ url_for('auth.create_user') }}">Create User</a>
+        {% endif %}
+        {% if current_user.has_permission('view_roles') %}
+        <a class="dropdown-item" href="{{ url_for('auth.roles') }}">Roles & Permissions</a>
+        {% endif %}
+    </div>
+</li>
+{% endif %}                
+                <!-- Plugins - visible based on permissions -->
+                {% if current_user.has_permission('view_plugins') or current_user.is_system_admin %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <span class="nav-link-icon">
+                            <!-- Plugins icon SVG here -->
+                        </span>
+                        <span class="nav-link-title">
+                            Plugins
+                        </span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</aside>

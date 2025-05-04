@@ -1,0 +1,172 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}Quota: {{ tenant.name }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('tenant.view', slug=tenant.slug) }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Tenant
+    </a>
+    <a href="{{ url_for('tenant.edit', slug=tenant.slug) }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+            <path d="M16 5l3 3"></path>
+        </svg>
+        Update Quotas
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Resource Usage</h3>
+                <div class="card-actions">
+                    <span class="badge bg-blue">{{ tenant.plan|capitalize }} Plan</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body p-2">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="bg-primary text-white avatar">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
+                                                <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                                <path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="font-weight-medium">
+                                            Users
+                                        </div>
+                                        <div class="text-muted">
+                                            {{ tenant.usage.users }} of {{ tenant.quotas.max_users }} users
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="progress mb-1">
+                                        <div class="progress-bar bg-primary" style="width: {{ tenant.usage.users_percentage }}%" role="progressbar" aria-valuenow="{{ tenant.usage.users_percentage }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ tenant.usage.users_percentage }}% of users quota used">
+                                            <span class="visually-hidden">{{ tenant.usage.users_percentage }}% of users quota used</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div>{{ tenant.usage.users_percentage }}% used</div>
+                                        <div class="ms-auto">
+                                            <span class="text-muted">{{ tenant.quotas.max_users - tenant.usage.users }} remaining</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body p-2">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="bg-blue text-white avatar">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"></path>
+                                                <path d="M18 13.3l-6.3 -6.3"></path>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="font-weight-medium">
+                                            Storage
+                                        </div>
+                                        <div class="text-muted">
+                                            {{ tenant.usage.storage_mb }} of {{ tenant.quotas.max_storage_mb }} MB
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="progress mb-1">
+                                        <div class="progress-bar bg-blue" style="width: {{ tenant.usage.storage_percentage }}%" role="progressbar" aria-valuenow="{{ tenant.usage.storage_percentage }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ tenant.usage.storage_percentage }}% of storage quota used">
+                                            <span class="visually-hidden">{{ tenant.usage.storage_percentage }}% of storage quota used</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div>{{ tenant.usage.storage_percentage }}% used</div>
+                                        <div class="ms-auto">
+                                            <span class="text-muted">{{ tenant.quotas.max_storage_mb - tenant.usage.storage_mb }} MB remaining</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h4>API Calls</h4>
+                    <div class="card">
+                        <div class="card-body p-2">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-green text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M22 12h-6"></path>
+                                            <path d="M19 15l3 -3l-3 -3"></path>
+                                            <path d="M2 12h6"></path>
+                                            <path d="M5 15l-3 -3l3 -3"></path>
+                                            <path d="M9 6v12"></path>
+                                            <path d="M15 6v12"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">
+                                        API Calls
+                                    </div>
+                                    <div class="text-muted">
+                                        {{ tenant.usage.api_calls }} calls this month
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="text-muted">
+                            Based on {{ tenant.plan|capitalize }} plan limits. 
+                            {% if tenant.plan != 'enterprise' %}
+                            <a href="{{ url_for('tenant.edit', slug=tenant.slug) }}">Upgrade plan</a> for higher quotas.
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{{ url_for('tenant.edit', slug=tenant.slug) }}" class="btn btn-primary">
+                            Update Quotas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

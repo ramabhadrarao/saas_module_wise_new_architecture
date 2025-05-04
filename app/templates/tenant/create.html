@@ -1,0 +1,78 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}Create Tenant{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('tenant.index') }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Tenants
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Tenant Information</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('tenant.create') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label required">Tenant Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="My Company" required>
+                        <small class="form-hint">The name will be used to generate a unique slug.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Owner Email</label>
+                        <input type="email" name="owner_email" class="form-control" placeholder="admin@example.com" required>
+                        <small class="form-hint">The owner will receive administrative notifications for this tenant.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Brief description of the tenant"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Domain (optional)</label>
+                        <input type="text" name="domain" class="form-control" placeholder="example.com">
+                        <small class="form-hint">Custom domain for tenant access. Leave blank to use the default domain.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Subscription Plan</label>
+                        <select name="plan" class="form-select">
+                            <option value="free">Free</option>
+                            <option value="basic">Basic</option>
+                            <option value="pro">Professional</option>
+                            <option value="enterprise">Enterprise</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <div class="row">
+                            <div class="col">
+                                <a href="{{ url_for('tenant.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                            <div class="col text-end">
+                                <button type="submit" class="btn btn-primary">Create Tenant</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

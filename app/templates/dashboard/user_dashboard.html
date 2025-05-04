@@ -1,0 +1,163 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="row row-deck row-cards">
+    <!-- User Welcome Card -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Welcome back, {{ current_user.first_name or current_user.username }}!</h3>
+                <p>
+                    {% if current_user.tenant %}
+                    You are currently using {{ current_user.tenant.name }}.
+                    {% else %}
+                    You are not assigned to any tenant yet.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Permissions -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">My Roles & Permissions</h3>
+            </div>
+            <div class="card-body">
+                <h4>Roles</h4>
+                <div class="mb-3">
+                    {% for role in current_user.roles %}
+                    <span class="badge bg-blue me-1 mb-1">{{ role.name }}</span>
+                    {% else %}
+                    <span class="text-muted">No roles assigned</span>
+                    {% endfor %}
+                </div>
+                
+                <h4 class="mt-4">Permissions</h4>
+                <div>
+                    {% set permissions = [] %}
+                    {% for role in current_user.roles %}
+                        {% for permission in role.permissions %}
+                            {% if permission not in permissions %}
+                                {% set _ = permissions.append(permission) %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    
+                    {% for permission in permissions %}
+                    <span class="badge bg-azure me-1 mb-1">{{ permission }}</span>
+                    {% else %}
+                    <span class="text-muted">No specific permissions</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-primary">
+                    View Profile
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Available Modules -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Available Modules</h3>
+            </div>
+            <div class="card-body">
+                <div class="row row-cards">
+                    <!-- Show modules based on permissions -->
+                    
+                    <!-- Example modules - customize based on your actual modules -->
+                    {% if current_user.has_permission('view_support') %}
+                    <div class="col-md-6 col-lg-4">
+                        <a href="#" class="card card-link card-sm">
+                            <div class="card-body text-center">
+                                <div class="text-azure mb-3">
+                                    <!-- Support icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                                        <path d="M12 17l0 .01"></path>
+                                        <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4"></path>
+                                    </svg>
+                                </div>
+                                <div>Support</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.has_permission('view_todo') %}
+                    <div class="col-md-6 col-lg-4">
+                        <a href="#" class="card card-link card-sm">
+                            <div class="card-body text-center">
+                                <div class="text-green mb-3">
+                                    <!-- Todo icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"></path>
+                                        <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"></path>
+                                        <path d="M9 14l2 2l4 -4"></path>
+                                    </svg>
+                                </div>
+                                <div>Todo</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.has_permission('view_billing') %}
+                    <div class="col-md-6 col-lg-4">
+                        <a href="#" class="card card-link card-sm">
+                            <div class="card-body text-center">
+                                <div class="text-yellow mb-3">
+                                    <!-- Billing icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 1 -2 -2v-12"></path>
+                                        <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4"></path>
+                                    </svg>
+                                </div>
+                                <div>Billing</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <div class="empty">
+                    <div class="empty-img">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-muted" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M12 9v2m0 4v.01"></path>
+                            <path d="M5.07 19H19a2 2 0 0 0 1.75 -2.75L13.75 4a2 2 0 0 0 -3.5 0L3.25 16.25a2 2 0 0 0 1.75 2.75"></path>
+                        </svg>
+                    </div>
+                    <p class="empty-title">No recent activity</p>
+                    <p class="empty-subtitle text-muted">
+                        Your recent activities will appear here.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

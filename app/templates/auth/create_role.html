@@ -1,0 +1,129 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Create Role{% endblock %}
+
+{% block page_title %}Create Role{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('auth.roles') }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Roles
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Create New Role</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('auth.create_role') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Role Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    {% if current_user.is_system_admin %}
+                    <div class="mb-3">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_system_role" class="form-check-input">
+                            <span class="form-check-label">System Role</span>
+                        </label>
+                        <div class="form-hint">System roles are available to all tenants</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Permissions</label>
+                        {% for group_name, permissions in permission_groups.items() %}
+                        <div class="permission-group mb-3">
+                            <div class="form-label">{{ group_name }}</div>
+                            <div class="form-selectgroup">
+                                {% for permission in permissions %}
+                                <label class="form-selectgroup-item">
+                                    <input type="checkbox" name="permissions" value="{{ permission }}" class="form-selectgroup-input permission-item">
+                                    <span class="form-selectgroup-label">{{ permission }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="form-footer">
+                        <div class="row">
+                            <div class="col">
+                                <a href="{{ url_for('auth.roles') }}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                            <div class="col text-end">
+                                <button type="submit" class="btn btn-primary">Create Role</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle select/deselect all for permission groups
+        document.querySelectorAll('.select-all').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const group = this.closest('.permission-group');
+                group.querySelectorAll('.permission-item').forEach(item => {
+                    item.checked = isChecked;
+                });
+            });
+        });
+        
+        // Update select all checkbox based on individual permissions
+        document.querySelectorAll('.permission-group').forEach(group => {
+            const updateSelectAll = () => {
+                const selectAll = group.querySelector('.select-all');
+                if (selectAll) {
+                    const items = group.querySelectorAll('.permission-item');
+                    const checkedItems = group.querySelectorAll('.permission-item:checked');
+                    
+                    if (checkedItems.length === 0) {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = false;
+                    } else if (checkedItems.length === items.length) {
+                        selectAll.checked = true;
+                        selectAll.indeterminate = false;
+                    } else {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = true;
+                    }
+                }
+            };
+            
+            group.querySelectorAll('.permission-item').forEach(item => {
+                item.addEventListener('change', updateSelectAll);
+            });
+            
+            // Initial update
+            updateSelectAll();
+        });
+    });
+</script>
+{% endblock %}

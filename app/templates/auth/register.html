@@ -1,0 +1,62 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-tight py-4">
+    <div class="text-center mb-4">
+        <h2>Register</h2>
+        {% if tenant %}
+        <div class="text-muted">Sign up for {{ tenant.name }}</div>
+        {% endif %}
+    </div>
+    
+    <form class="card card-md" method="post" action="{{ url_for('auth.register') }}{% if tenant %}?tenant={{ tenant.slug }}{% endif %}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if tenant %}
+        <input type="hidden" name="tenant_id" value="{{ tenant.id }}">
+        {% endif %}
+        
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label required">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="username" autocomplete="off" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label required">Email</label>
+                <input type="email" name="email" class="form-control" placeholder="email@example.com" autocomplete="off" required>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="First name">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Last name">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label required">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="password" autocomplete="off" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label required">Confirm Password</label>
+                <input type="password" name="confirm_password" class="form-control" placeholder="confirm password" autocomplete="off" required>
+            </div>
+            
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary w-100">Create Account</button>
+            </div>
+        </div>
+    </form>
+    
+    <div class="text-center text-muted mt-3">
+        Already have an account? <a href="{{ url_for('auth.login') }}" tabindex="-1">Sign in</a>
+    </div>
+</div>
+{% endblock %}

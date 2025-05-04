@@ -1,0 +1,305 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}System Dashboard{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('tenant.create') }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M12 5l0 14"></path>
+            <path d="M5 12l14 0"></path>
+        </svg>
+        Create Tenant
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-deck row-cards">
+    <!-- System Statistics -->
+    <div class="col-12">
+        <div class="row row-cards">
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <span class="bg-primary text-white avatar">
+                                    <!-- Tenants icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 21h18"></path>
+                                        <path d="M5 21v-14l8 -4v18"></path>
+                                        <path d="M19 21v-10l-6 -4"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="col">
+                                <div class="font-weight-medium">
+                                    {{ tenant_count }} Tenants
+                                </div>
+                                <div class="text-muted">
+                                    {{ active_tenant_count }} active
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <span class="bg-green text-white avatar">
+                                    <!-- Users icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
+                                        <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        <path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="col">
+                                <div class="font-weight-medium">
+                                    {{ user_count }} Users
+                                </div>
+                                <div class="text-muted">
+                                    {{ active_user_count }} active
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Add more statistics as needed -->
+        </div>
+    </div>
+    
+    <!-- Tenant List -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Tenants</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Users</th>
+                                <th>Created</th>
+                                <th class="w-1">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tenant in tenants %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('tenant.view', slug=tenant.slug) }}">{{ tenant.name }}</a>
+                                </td>
+                                <td>
+                                    {% if tenant.status == 'active' %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% elif tenant.status == 'inactive' %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                    {% elif tenant.status == 'suspended' %}
+                                    <span class="badge bg-danger">Suspended</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ tenant_user_counts[tenant.id] if tenant_user_counts and tenant.id in tenant_user_counts else 0 }}
+                                </td>
+                                <td>
+                                    {{ tenant.created_at.strftime('%Y-%m-%d') }}
+                                </td>
+                                <td>
+                                    <div class="btn-list flex-nowrap">
+                                        <a href="{{ url_for('tenant.view', slug=tenant.slug) }}" class="btn btn-sm btn-outline-primary">
+                                            Manage
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">System Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex mb-2">
+                        <div>Database Connection</div>
+                        <div class="ms-auto">
+                            <span class="text-success">Connected</span>
+                        </div>
+                    </div>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex mb-2">
+                        <div>Configuration</div>
+                        <div class="ms-auto">
+                            <span class="text-success">Initialized</span>
+                        </div>
+                    </div>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex mb-2">
+                        <div>Error Handling</div>
+                        <div class="ms-auto">
+                            <span class="text-success">Configured</span>
+                        </div>
+                    </div>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Module Status -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Module Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="row row-cards">
+                    <div class="col-md-6">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="bg-blue text-white avatar">
+                                            <!-- Core icon -->
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path>
+                                                <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="font-weight-medium">
+                                            Core Infrastructure
+                                        </div>
+                                        <div class="text-success">
+                                            Implemented
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="bg-primary text-white avatar">
+                                            <!-- Tenant icon -->
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M3 21h18"></path>
+                                                <path d="M5 21v-14l8 -4v18"></path>
+                                                <path d="M19 21v-10l-6 -4"></path>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="font-weight-medium">
+                                            Tenant Management
+                                        </div>
+                                        <div class="text-success">
+                                            Implemented
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="bg-green text-white avatar">
+                                            <!-- User icon -->
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
+                                                <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                                <path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="font-weight-medium">
+                                            Authentication
+                                        </div>
+                                        <div class="text-success">
+                                            Implemented
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="bg-yellow text-white avatar">
+                                            <!-- Plugin icon -->
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+                                                <path d="M9 12v8.248c0 .463 .114 .754 .654 .754c.5 0 .882 -.408 .882 -.914v-7.088"></path>
+                                                <path d="M15 12v8.248c0 .463 -.114 .754 -.654 .754c-.5 0 -.882 -.408 -.882 -.914v-7.088"></path>
+                                                <path d="M12 3c-.463 0 -.814 .082 -1.054 .241c-.241 .16 -.3 .361 -.328 .66c-.028 .28 -.028 .996 -.028 .996l-1.59 -1.897l-.001 .003c0 -.012 -.927 1.273 -.927 1.273c-.497 .582 -.497 .645 -.497 .878c0 .232 .139 .442 .37 .602c.23 .16 .581 .24 1.045 .24h5.992c.464 0 .814 -.082 1.054 -.241c.241 -.159 .3 -.36 .328 -.66c.028 -.28 .028 -.996 .028 -.996l1.59 1.897l.001 -.003c0 .012 .927 -1.273 .927 -1.273c.497 -.582 .497 -.645 .497 -.878c0 -.232 -.139 -.441 -.37 -.602c-.23 -.16 -.581 -.24 -1.045 -.24h-5.992z"></path>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="font-weight-medium">
+                                            Plugin System
+                                        </div>
+                                        <div class="text-muted">
+                                            Not Implemented
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

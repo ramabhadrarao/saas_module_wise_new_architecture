@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} | {{ config.APP_NAME }}</title>
+    <!-- Tabler UI CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="antialiased">
+    <div class="page">
+        <!-- Sidebar -->
+        {% include 'layout/sidebar.html' %}
+        
+        <!-- Page content -->
+        <div class="page-wrapper">
+            <!-- Page header -->
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                {% block page_title %}{% endblock %}
+                            </h2>
+                        </div>
+                        <!-- User account menu -->
+                        <div class="col-auto ms-auto d-print-none">
+                            <div class="navbar-nav flex-row">
+                                <div class="nav-item dropdown">
+                                    {% if current_user.is_authenticated %}
+                                    <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                                        <span class="avatar avatar-sm bg-primary">
+                                            {{ current_user.username[0] | upper }}
+                                        </span>
+                                        <div class="d-none d-xl-block ps-2">
+                                            <div>{{ current_user.username }}</div>
+                                            <div class="mt-1 small text-muted">
+                                                {% if current_user.is_system_admin %}
+                                                System Administrator
+                                                {% elif current_user.is_tenant_admin %}
+                                                Tenant Administrator
+                                                {% else %}
+                                                {{ current_user.tenant.name if current_user.tenant else 'User' }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                                        <a href="{{ url_for('auth.profile') }}" class="dropdown-item">Profile</a>
+                                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">Change Password</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item">Logout</a>
+                                    </div>
+                                    {% else %}
+                                    <div class="d-flex">
+                                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary me-2">Login</a>
+                                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register</a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Page title actions -->
+                        <div class="col-auto d-print-none">
+                            {% block page_actions %}{% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Page body -->
+            <div class="page-body">
+                <div class="container-xl">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible">
+                                    {{ message }}
+                                    <a href="#" class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+            
+            <!-- Page footer -->
+            <footer class="footer footer-transparent d-print-none">
+                <div class="container-xl">
+                    <div class="row text-center align-items-center flex-row-reverse">
+                        <div class="col-lg-auto ms-lg-auto">
+                            <ul class="list-inline list-inline-dots mb-0">
+                                <li class="list-inline-item">
+                                    <a href="#" class="link-secondary">Documentation</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="#" class="link-secondary">Support</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                            <ul class="list-inline list-inline-dots mb-0">
+                                <li class="list-inline-item">
+                                    &copy; {% if now is defined %}{{ now.year }}{% else %}2025{% endif %} {{ config.APP_NAME }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- Tabler UI JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <!-- Core JS -->
+    <script src="{{ url_for('static', filename='js/core.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

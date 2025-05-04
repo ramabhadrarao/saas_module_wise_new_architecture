@@ -1,0 +1,91 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}Edit Tenant: {{ tenant.name }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('tenant.view', slug=tenant.slug) }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Tenant
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Tenant Information</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('tenant.edit', slug=tenant.slug) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label required">Tenant Name</label>
+                        <input type="text" name="name" class="form-control" value="{{ tenant.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Owner Email</label>
+                        <input type="email" class="form-control" value="{{ tenant.owner_email }}" readonly disabled>
+                        <small class="form-hint">Owner email cannot be changed. Please contact support for assistance.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3">{{ tenant.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Domain (optional)</label>
+                        <input type="text" name="domain" class="form-control" value="{{ tenant.domain or '' }}">
+                        <small class="form-hint">Custom domain for tenant access. Leave blank to use the default domain.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Subscription Plan</label>
+                        <select name="plan" class="form-select">
+                            <option value="free" {% if tenant.plan == 'free' %}selected{% endif %}>Free</option>
+                            <option value="basic" {% if tenant.plan == 'basic' %}selected{% endif %}>Basic</option>
+                            <option value="pro" {% if tenant.plan == 'pro' %}selected{% endif %}>Professional</option>
+                            <option value="enterprise" {% if tenant.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                        </select>
+                    </div>
+                    
+                    <div class="hr-text">Resource Quotas</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Max Users</label>
+                        <input type="number" name="max_users" class="form-control" value="{{ tenant.quotas.max_users }}" min="1">
+                        <small class="form-hint">Maximum number of users allowed for this tenant.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Max Storage (MB)</label>
+                        <input type="number" name="max_storage_mb" class="form-control" value="{{ tenant.quotas.max_storage_mb }}" min="1">
+                        <small class="form-hint">Maximum storage space in megabytes.</small>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <div class="row">
+                            <div class="col">
+                                <a href="{{ url_for('tenant.view', slug=tenant.slug) }}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                            <div class="col text-end">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ tenant.name }} Dashboard{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('tenant.view', slug=tenant.slug) }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+            <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path>
+        </svg>
+        Manage Tenant
+    </a>
+    {% if current_user.has_permission('create_user') %}
+    <a href="{{ url_for('auth.create_user') }}" class="btn btn-outline-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path>
+            <path d="M16 19h6"></path>
+            <path d="M19 16v6"></path>
+            <path d="M6 21v-2a4 4 0 0 1 4 -4h4"></path>
+        </svg>
+        Add User
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-deck row-cards">
+    <!-- Tenant Overview -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Tenant Overview</h3>
+            </div>
+            <div class="card-body">
+                <div class="datagrid">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Status</div>
+                        <div class="datagrid-content">
+                            {% if tenant.status == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif tenant.status == 'inactive' %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% elif tenant.status == 'suspended' %}
+                            <span class="badge bg-danger">Suspended</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Plan</div>
+                        <div class="datagrid-content">
+                            <span class="badge bg-blue">{{ tenant.plan|capitalize }}</span>
+                        </div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Domain</div>
+                        <div class="datagrid-content">
+                            {% if tenant.domain %}
+                            {{ tenant.domain }}
+                            {% else %}
+                            <span class="text-muted">Not set</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Created</div>
+                        <div class="datagrid-content">
+                            {{ tenant.created_at.strftime('%Y-%m-%d') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resource Usage -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Resource Usage</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Users ({{ users|length }} / {{ tenant.max_users }})</label>
+                    <div class="progress mb-2">
+                        {% set user_percentage = (users|length / tenant.max_users * 100)|int if tenant.max_users > 0 else 100 %}
+                        <div class="progress-bar bg-primary" style="width: {{ user_percentage }}%" role="progressbar" aria-valuenow="{{ user_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            <span class="visually-hidden">{{ user_percentage }}% used</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div>{{ user_percentage }}% used</div>
+                        <div class="ms-auto">
+                            <a href="{{ url_for('auth.users') }}" class="btn btn-sm">Manage Users</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    {% set storage_percentage = (tenant.usage.storage_mb / tenant.max_storage_mb * 100)|int if tenant.max_storage_mb > 0 else 0 %}
+                    <label class="form-label">Storage ({{ tenant.usage.storage_mb }} / {{ tenant.max_storage_mb }} MB)</label>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-blue" style="width: {{ storage_percentage }}%" role="progressbar" aria-valuenow="{{ storage_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            <span class="visually-hidden">{{ storage_percentage }}% used</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div>{{ storage_percentage }}% used</div>
+                        <div class="ms-auto">
+                            <a href="{{ url_for('tenant.quota', slug=tenant.slug) }}" class="btn btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex">
+                    <a href="{{ url_for('tenant.quota', slug=tenant.slug) }}" class="btn btn-link">View All Quotas</a>
+                    <a href="{{ url_for('tenant.edit', slug=tenant.slug) }}" class="btn btn-link ms-auto">Edit Tenant</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Management -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Users</h3>
+                <div class="card-actions">
+                    <a href="{{ url_for('auth.users') }}" class="btn btn-primary">
+                        View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Roles</th>
+                                <th>Last Login</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users[:5] %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for role in user.roles %}
+                                    <span class="badge bg-blue me-1">{{ role.name }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if user.last_login %}
+                                    {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                    <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if users|length > 5 %}
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('auth.users') }}" class="btn btn-sm btn-outline-primary">
+                        View All {{ users|length }} Users
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

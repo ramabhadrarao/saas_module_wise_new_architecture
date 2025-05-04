@@ -1,0 +1,138 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('auth.edit_profile') }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path>
+            <path d="M16 5l3 3"></path>
+        </svg>
+        Edit Profile
+    </a>
+    <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M12 17v4"></path>
+            <path d="M10 20h4"></path>
+            <path d="M15 7v-2a3 3 0 0 0 -6 0v2"></path>
+            <path d="M9 11a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+            <path d="M11 11h2"></path>
+        </svg>
+        Change Password
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">User Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="datagrid">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Username</div>
+                        <div class="datagrid-content">{{ current_user.username }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Email</div>
+                        <div class="datagrid-content">{{ current_user.email }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Full Name</div>
+                        <div class="datagrid-content">
+                            {% if current_user.first_name and current_user.last_name %}
+                            {{ current_user.first_name }} {{ current_user.last_name }}
+                            {% else %}
+                            <span class="text-muted">Not set</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Account Status</div>
+                        <div class="datagrid-content">
+                            {% if current_user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-warning">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Last Login</div>
+                        <div class="datagrid-content">
+                            {% if current_user.last_login %}
+                            {{ current_user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            <span class="text-muted">Never</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if current_user.tenant %}
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Tenant</div>
+                        <div class="datagrid-content">{{ current_user.tenant.name }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Roles & Permissions</h3>
+            </div>
+            <div class="card-body">
+                <h4>Roles</h4>
+                <div class="mb-3">
+                    {% for role in current_user.roles %}
+                    <span class="badge bg-blue me-1 mb-1">{{ role.name }}</span>
+                    {% else %}
+                    <span class="text-muted">No roles assigned</span>
+                    {% endfor %}
+                </div>
+                
+                {% if current_user.is_tenant_admin %}
+                <div class="mb-3">
+                    <span class="badge bg-purple">Tenant Administrator</span>
+                </div>
+                {% endif %}
+                
+                {% if current_user.is_system_admin %}
+                <div class="mb-3">
+                    <span class="badge bg-red">System Administrator</span>
+                </div>
+                {% endif %}
+                
+                <h4 class="mt-4">Permissions</h4>
+                <div>
+                    {% set permissions = [] %}
+                    {% for role in current_user.roles %}
+                        {% for permission in role.permissions %}
+                            {% if permission not in permissions %}
+                                {% set _ = permissions.append(permission) %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    
+                    {% for permission in permissions %}
+                    <span class="badge bg-azure me-1 mb-1">{{ permission }}</span>
+                    {% else %}
+                    <span class="text-muted">No specific permissions</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
