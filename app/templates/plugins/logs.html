@@ -1,0 +1,102 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Plugin Logs{% endblock %}
+
+{% block page_title %}Plugin Logs{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('plugins.index') }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Plugins
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Plugin Activity Logs</h3>
+                {% if tenant %}
+                <div class="card-subtitle">
+                    For tenant: {{ tenant.name }}
+                </div>
+                {% endif %}
+                <div class="card-actions">
+                    <form class="input-group input-group-flat">
+                        <input type="text" class="form-control" placeholder="Search logs...">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+                                <path d="M21 21l-6 -6"></path>
+                            </svg>
+                            Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if logs %}
+                <div class="table-responsive">
+                    <table class="table table-vcenter">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Plugin</th>
+                                <th>Action</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp }}</td>
+                                <td>{{ log.plugin_name }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.username }}</td>
+                                <td>
+                                    {% if log.status == 'success' %}
+                                    <span class="badge bg-success">Success</span>
+                                    {% elif log.status == 'error' %}
+                                    <span class="badge bg-danger">Error</span>
+                                    {% elif log.status == 'warning' %}
+                                    <span class="badge bg-warning">Warning</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.details }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty">
+                    <div class="empty-img">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-muted" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                            <path d="M9 17h6"></path>
+                            <path d="M9 13h6"></path>
+                        </svg>
+                    </div>
+                    <p class="empty-title">No logs found</p>
+                    <p class="empty-subtitle text-muted">
+                        There are no plugin activity logs available at this time.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

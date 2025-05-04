@@ -66,18 +66,35 @@
 </li>
 {% endif %}                
                 <!-- Plugins - visible based on permissions -->
-                {% if current_user.has_permission('view_plugins') or current_user.is_system_admin %}
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <span class="nav-link-icon">
-                            <!-- Plugins icon SVG here -->
-                        </span>
-                        <span class="nav-link-title">
-                            Plugins
-                        </span>
-                    </a>
-                </li>
-                {% endif %}
+                <!-- Plugins - visible based on permissions -->
+{% if current_user.has_permission('view_plugins') or current_user.is_system_admin %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#navbar-plugins" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+        <span class="nav-link-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+                <path d="M9 12v8.248c0 .463 .114 .754 .654 .754c.5 0 .882 -.408 .882 -.914v-7.088"></path>
+                <path d="M15 12v8.248c0 .463 -.114 .754 -.654 .754c-.5 0 -.882 -.408 -.882 -.914v-7.088"></path>
+                <path d="M12 3c-.463 0 -.814 .082 -1.054 .241c-.241 .16 -.3 .361 -.328 .66c-.028 .28 -.028 .996 -.028 .996l-1.59 -1.897l-.001 .003c0 -.012 -.927 1.273 -.927 1.273c-.497 .582 -.497 .645 -.497 .878c0 .232 .139 .442 .37 .602c.23 .16 .581 .24 1.045 .24h5.992c.464 0 .814 -.082 1.054 -.241c.241 -.159 .3 -.36 .328 -.66c.028 -.28 .028 -.996 .028 -.996l1.59 1.897l.001 -.003c0 .012 .927 -1.273 .927 -1.273c.497 -.582 .497 -.645 .497 -.878c0 -.232 -.139 -.441 -.37 -.602c-.23 -.16 -.581 -.24 -1.045 -.24h-5.992z"></path>
+            </svg>
+        </span>
+        <span class="nav-link-title">
+            Plugins
+        </span>
+    </a>
+    <div class="dropdown-menu">
+        <a class="dropdown-item" href="{{ url_for('plugins.index') }}">All Plugins</a>
+        <a class="dropdown-item" href="{{ url_for('plugins.marketplace') }}">Marketplace</a>
+        {% if current_user.has_permission('configure_plugin') %}
+        <a class="dropdown-item" href="{{ url_for('plugins.logs') }}">Plugin Logs</a>
+        {% endif %}
+        {% if current_user.is_system_admin %}
+        <a class="dropdown-item" href="{{ url_for('plugins.admin') }}">Plugin Administration</a>
+        {% endif %}
+    </div>
+</li>
+{% endif %}
             </ul>
         </div>
     </div>

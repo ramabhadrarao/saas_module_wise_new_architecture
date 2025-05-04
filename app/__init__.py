@@ -87,6 +87,15 @@ def create_app():
     except ImportError:
         pass  # Auth module not implemented yet
     
+    # Register plugin blueprints
+    try:
+        from app.plugins.views import plugin_bp
+        from app.plugins.routes import plugin_api
+        app.register_blueprint(plugin_bp)
+        app.register_blueprint(plugin_api)
+    except ImportError:
+        pass  # Plugin module not implemented yet
+    
     # Register error handlers
     from app.core.error_handlers import register_handlers
     register_handlers(app)
@@ -98,6 +107,21 @@ def create_app():
             Role.insert_default_roles()
         except Exception as e:
             app.logger.error(f"Error inserting default roles: {str(e)}")
+        
+        # Initialize plugin manager - but only after checking if tables exist
+        try:
+            from sqlalchemy import inspect
+            from app.plugins.plugin_manager import PluginManager
+            
+            # Check if plugins table exists before initializing
+            inspector = inspect(db.engine)
+            if 'plugins' in inspector.get_table_names():
+                plugin_manager = PluginManager()
+                app.logger.info("Plugin manager initialized successfully")
+            else:
+                app.logger.info("Plugins table not yet created - skipping plugin manager initialization")
+        except Exception as e:
+            app.logger.error(f"Error initializing plugin manager: {str(e)}")
     
     return app
 

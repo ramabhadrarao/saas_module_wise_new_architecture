@@ -80,7 +80,62 @@
             <!-- Add more statistics as needed -->
         </div>
     </div>
-    
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Plugins Overview</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="avatar bg-blue text-white">{{ plugins|length }}</span>
+                                    <div class="ms-3">
+                                        <div class="text-body">Total Plugins</div>
+                                        <div class="text-muted">Registered in the system</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="avatar bg-green text-white">{{ active_plugins|length }}</span>
+                                    <div class="ms-3">
+                                        <div class="text-body">Active Plugins</div>
+                                        <div class="text-muted">Currently enabled</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="avatar bg-purple text-white">{{ tenant_plugins|length }}</span>
+                                    <div class="ms-3">
+                                        <div class="text-body">Tenant Plugins</div>
+                                        <div class="text-muted">Across all tenants</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex">
+                    <a href="{{ url_for('plugins.admin') }}" class="btn btn-link">Manage Plugins</a>
+                    <a href="{{ url_for('plugins.discover') }}" class="btn btn-primary ms-auto">Discover Plugins</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Tenant List -->
     <div class="col-12">
         <div class="card">
@@ -274,8 +329,7 @@
                             <div class="card-body">
                                 <div class="row align-items-center">
                                     <div class="col-auto">
-                                        <span class="bg-yellow text-white avatar">
-                                            <!-- Plugin icon -->
+                                        <span class="bg-primary text-white avatar">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
@@ -289,9 +343,12 @@
                                         <div class="font-weight-medium">
                                             Plugin System
                                         </div>
-                                        <div class="text-muted">
-                                            Not Implemented
+                                        <div class="text-success">
+                                            Implemented
                                         </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <a href="{{ url_for('plugins.admin') }}" class="btn btn-sm">Manage</a>
                                     </div>
                                 </div>
                             </div>

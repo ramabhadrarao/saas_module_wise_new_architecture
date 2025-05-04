@@ -1,0 +1,176 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}Plugin Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    {% if current_user.has_permission('install_plugin') %}
+    <a href="{{ url_for('plugins.marketplace') }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M12 5l0 14"></path>
+            <path d="M5 12l14 0"></path>
+        </svg>
+        Install Plugin
+    </a>
+    {% endif %}
+    
+    {% if current_user.is_system_admin %}
+    <a href="{{ url_for('plugins.admin') }}" class="btn btn-outline-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"></path>
+            <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+        </svg>
+        Admin
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <!-- Tenant plugins section -->
+    {% if tenant %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Enabled Plugins for {{ tenant.name }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="row row-cards">
+                    {% for plugin in tenant_plugins %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card">
+                            <div class="card-status-top bg-primary"></div>
+                            <div class="card-body">
+                                <div class="row align-items-center mb-3">
+                                    <div class="col-auto">
+                                        <span class="avatar bg-primary text-white">
+                                            {{ plugin.name[0] | upper }}
+                                        </span>
+                                    </div>
+                                    <div class="col">
+                                        <h3 class="card-title mb-0">{{ plugin.name }}</h3>
+                                        <div class="text-muted">v{{ plugin.version }}</div>
+                                    </div>
+                                </div>
+                                {% if plugin.description %}
+                                <p class="text-muted">{{ plugin.description }}</p>
+                                {% endif %}
+                                <div class="d-flex mt-3">
+                                    <a href="{{ url_for('plugins.view', slug=plugin.slug) }}" class="btn btn-outline-primary w-100">Configure</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12">
+                        <div class="empty">
+                            <div class="empty-img">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-muted" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M8 9l3 3l-3 3"></path>
+                                    <path d="M13 15h3a1 1 0 0 0 1 -1v-4a1 1 0 0 0 -1 -1h-3"></path>
+                                    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                                </svg>
+                            </div>
+                            <p class="empty-title">No plugins enabled</p>
+                            <p class="empty-subtitle text-muted">
+                                You haven't enabled any plugins yet. Visit the plugin marketplace to install plugins.
+                            </p>
+                            {% if current_user.has_permission('install_plugin') %}
+                            <div class="empty-action">
+                                <a href="{{ url_for('plugins.marketplace') }}" class="btn btn-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M12 5l0 14"></path>
+                                        <path d="M5 12l14 0"></path>
+                                    </svg>
+                                    Install Plugin
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Available plugins section -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Available Plugins</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Description</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th class="w-1">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plugin in plugins %}
+                            {% if plugin.status == 'active' %}
+                            <tr>
+                                <td>{{ plugin.name }}</td>
+                                <td>{{ plugin.version }}</td>
+                                <td>{{ plugin.description }}</td>
+                                <td>{{ plugin.author }}</td>
+                                <td>
+                                    <span class="badge bg-success">Active</span>
+                                </td>
+                                <td>
+                                    <div class="btn-list flex-nowrap">
+                                        <a href="{{ url_for('plugins.view', slug=plugin.slug) }}" class="btn btn-sm btn-outline-primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                                                <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path>
+                                            </svg>
+                                            View
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="empty">
+                                        <div class="empty-img">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-muted" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M8 9l3 3l-3 3"></path>
+                                                <path d="M13 15h3a1 1 0 0 0 1 -1v-4a1 1 0 0 0 -1 -1h-3"></path>
+                                                <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                                            </svg>
+                                        </div>
+                                        <p class="empty-title">No plugins available</p>
+                                        <p class="empty-subtitle text-muted">
+                                            No plugins have been registered or activated. Contact your system administrator.
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
