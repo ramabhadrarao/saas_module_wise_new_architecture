@@ -90,11 +90,106 @@ def view(slug):
             plugin_id=plugin.id
         ).first()
     
+    # Get all tenants and enabled tenant ids for system admins
+    tenants = []
+    enabled_tenant_ids = []
+    if current_user.is_system_admin:
+        from app.tenant.tenant import Tenant
+        tenants = Tenant.query.filter_by(status='active').all()
+        tenant_plugins = TenantPlugin.query.filter_by(
+            plugin_id=plugin.id,
+            enabled=True
+        ).all()
+        enabled_tenant_ids = [tp.tenant_id for tp in tenant_plugins]
+    
+    # Debug information
+    plugin_debug = {
+        'id': plugin.id,
+        'name': plugin.name,
+        'slug': plugin.slug,
+        'status': plugin.status,
+        'entry_point': plugin.entry_point,
+        'module_path': plugin.module_path,
+        'module_attr': plugin.module_attr,
+        'is_system': plugin.is_system,
+        'enabled_for_all': plugin.enabled_for_all,
+    }
+    
     return render_template('plugins/view.html',
                           title=f"Plugin: {plugin.name}",
                           plugin=plugin,
                           tenant=tenant,
-                          tenant_plugin=tenant_plugin)
+                          tenant_plugin=tenant_plugin,
+                          tenants=tenants,
+                          enabled_tenant_ids=enabled_tenant_ids,
+                          plugin_debug=plugin_debug)
+                          
+@plugin_bp.route('/<slug>/assign-tenants', methods=['GET', 'POST'])
+@system_admin_required
+def assign_tenants(slug):
+    """Assign plugin to multiple tenants"""
+    # Get the plugin
+    plugin = Plugin.query.filter_by(slug=slug).first()
+    if not plugin:
+        flash(f"Plugin '{slug}' not found", 'warning')
+        return redirect(url_for('plugins.index'))
+    
+    # Check if plugin is active
+    if plugin.status != PluginStatus.ACTIVE.value:
+        flash(f"Plugin '{slug}' must be active before assigning to tenants", 'warning')
+        return redirect(url_for('plugins.view', slug=slug))
+    
+    # Get all tenants
+    from app.tenant.tenant import Tenant
+    tenants = Tenant.query.filter_by(status='active').all()
+    
+    if request.method == 'POST':
+        # Get form data
+        tenant_ids = request.form.getlist('tenant_ids')
+        enabled_for_all = request.form.get('enabled_for_all') == 'on'
+        
+        try:
+            # Update plugin's enabled_for_all setting
+            plugin.enabled_for_all = enabled_for_all
+            db.session.commit()
+            
+            if not enabled_for_all:
+                # Process tenant selections
+                for tenant in tenants:
+                    # Check if tenant is selected
+                    if str(tenant.id) in tenant_ids:
+                        # Enable plugin for this tenant
+                        TenantPlugin.enable_for_tenant(tenant.id, plugin.id)
+                    else:
+                        # Disable plugin for this tenant
+                        tenant_plugin = TenantPlugin.query.filter_by(
+                            tenant_id=tenant.id,
+                            plugin_id=plugin.id
+                        ).first()
+                        
+                        if tenant_plugin and tenant_plugin.enabled:
+                            TenantPlugin.disable_for_tenant(tenant.id, plugin.id)
+            
+            flash(f"Plugin '{plugin.name}' tenant assignments updated", 'success')
+        except Exception as e:
+            logger.error(f"Error assigning plugin to tenants: {str(e)}")
+            flash(f"Error assigning plugin to tenants: {str(e)}", 'danger')
+        
+        return redirect(url_for('plugins.view', slug=slug))
+    
+    # Get currently enabled tenants for this plugin
+    enabled_tenant_ids = []
+    tenant_plugins = TenantPlugin.query.filter_by(
+        plugin_id=plugin.id,
+        enabled=True
+    ).all()
+    enabled_tenant_ids = [str(tp.tenant_id) for tp in tenant_plugins]
+    
+    return render_template('plugins/assign_tenants.html',
+                          title=f"Assign Tenants - {plugin.name}",
+                          plugin=plugin,
+                          tenants=tenants,
+                          enabled_tenant_ids=enabled_tenant_ids)
 
 @plugin_bp.route('/<slug>/activate', methods=['POST'])
 @system_admin_required

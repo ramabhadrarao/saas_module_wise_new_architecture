@@ -102,7 +102,13 @@ def create_app():
         app.register_blueprint(plugin_api)
     except ImportError:
         pass  # Plugin module not implemented yet
-    
+    # Register plugin commands
+    try:
+        from app.plugins.commands import register_commands
+        register_commands(app)
+        app.logger.info("Plugin CLI commands registered")
+    except ImportError as e:
+        app.logger.warning(f"Failed to register plugin commands: {str(e)}")
     # Register error handlers
     from app.core.error_handlers import register_handlers
     register_handlers(app)

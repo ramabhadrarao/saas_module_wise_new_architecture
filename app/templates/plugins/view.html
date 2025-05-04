@@ -233,7 +233,81 @@
     {% endif %}
 </div>
 {% endblock %}
+<!-- Add this section to the plugins/view.html template -->
 
+<!-- Add this after the existing card sections -->
+{% if current_user.is_system_admin and plugin.status == 'active' %}
+<div class="col-md-6">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Tenant Assignment</h3>
+        </div>
+        <div class="card-body">
+            {% if plugin.enabled_for_all %}
+            <div class="alert alert-info">
+                <div class="d-flex">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M12 9h.01"></path>
+                            <path d="M11 12h1v4h1"></path>
+                            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="alert-title">This plugin is enabled for all tenants</h4>
+                        <div class="text-muted">Every tenant can use this plugin without explicit assignment</div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="mb-3">
+                <h4>Assigned Tenants</h4>
+                {% for tenant_id in enabled_tenant_ids %}
+                    {% for tenant in tenants %}
+                        {% if tenant.id == tenant_id %}
+                        <span class="badge bg-blue me-1 mb-1">{{ tenant.name }}</span>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                <span class="text-muted">No tenants assigned yet</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="d-flex">
+                <a href="{{ url_for('plugins.assign_tenants', slug=plugin.slug) }}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M9 11l3 3l8 -8"></path>
+                        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9"></path>
+                    </svg>
+                    Manage Tenant Assignments
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Add this at the end of the content block if you want the debug section -->
+{% if current_user.is_system_admin %}
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Debug Information</h3>
+            <div class="card-actions">
+                <a href="#" data-bs-toggle="collapse" data-bs-target="#debugContent" class="btn btn-outline-secondary btn-sm">
+                    Toggle Debug Info
+                </a>
+            </div>
+        </div>
+        <div class="card-body collapse" id="debugContent">
+            <pre>{{ plugin_debug | tojson(indent=4) }}</pre>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% block extra_js %}
 {% if tenant and tenant_plugin and tenant_plugin.enabled and plugin.status == 'active' and current_user.has_permission('configure_plugin') %}
 <script>

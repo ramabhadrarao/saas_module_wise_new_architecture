@@ -1,0 +1,85 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Assign Tenants - {{ plugin.name }}{% endblock %}
+
+{% block page_title %}Assign Tenants to Plugin: {{ plugin.name }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('plugins.view', slug=plugin.slug) }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Plugin
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Assign {{ plugin.name }} to Tenants</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('plugins.assign_tenants', slug=plugin.slug) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="enabled_for_all" class="form-check-input" {% if plugin.enabled_for_all %}checked{% endif %}>
+                            <span class="form-check-label">Enable for all tenants</span>
+                        </label>
+                        <div class="form-hint">When enabled, this plugin will be available to all tenants without explicit assignment</div>
+                    </div>
+                    
+                    <div class="mb-3" id="tenantList" {% if plugin.enabled_for_all %}style="display: none;"{% endif %}>
+                        <label class="form-label">Select Tenants</label>
+                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                            {% for tenant in tenants %}
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="checkbox" name="tenant_ids" value="{{ tenant.id }}" class="form-selectgroup-input" 
+                                       {% if tenant.id in enabled_tenant_ids %}checked{% endif %}>
+                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                    <div class="me-3">
+                                        <span class="form-selectgroup-check"></span>
+                                    </div>
+                                    <div>
+                                        <span class="form-selectgroup-title strong mb-1">{{ tenant.name }}</span>
+                                        <span class="d-block text-muted">{{ tenant.status }}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary">Save Assignments</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const enabledForAll = document.querySelector('input[name="enabled_for_all"]');
+        const tenantList = document.getElementById('tenantList');
+        
+        enabledForAll.addEventListener('change', function() {
+            if (this.checked) {
+                tenantList.style.display = 'none';
+            } else {
+                tenantList.style.display = 'block';
+            }
+        });
+    });
+</script>
+{% endblock %}

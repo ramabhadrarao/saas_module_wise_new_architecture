@@ -39,9 +39,90 @@ class PluginManager:
         for plugin in Plugin.query.all():
             self.plugins[plugin.slug] = plugin
     
+    # def discover_plugins(self, plugins_dir='plugins'):
+    #     """Discover plugins in the specified directory"""
+    #     logger.info(f"Discovering plugins in {plugins_dir}")
+        
+    #     # Check if directory exists
+    #     if not os.path.exists(plugins_dir):
+    #         logger.error(f"Plugins directory does not exist: {plugins_dir}")
+    #         return []
+        
+    #     # Log directory contents for debugging
+    #     logger.info(f"Contents of {plugins_dir}:")
+    #     try:
+    #         for item in os.listdir(plugins_dir):
+    #             logger.info(f"  - {item}")
+    #     except Exception as e:
+    #         logger.error(f"Error listing directory contents: {str(e)}")
+        
+    #     # Add plugins directory to Python path if not already there
+    #     if plugins_dir not in sys.path:
+    #         plugins_path = os.path.abspath(plugins_dir)
+    #         sys.path.insert(0, plugins_path)
+    #         logger.info(f"Added {plugins_path} to Python path")
+        
+    #     # Discover plugin modules
+    #     discovered = []
+    #     try:
+    #         # Get list of module finders - this helps debug module finding issues
+    #         module_paths = [plugins_dir]
+    #         logger.info(f"Looking for modules in paths: {module_paths}")
+            
+    #         for finder, name, ispkg in pkgutil.iter_modules(module_paths):
+    #             logger.info(f"Found module: {name}, is package: {ispkg}")
+                
+    #             if ispkg:  # Only consider packages, not individual modules
+    #                 try:
+    #                     # Import the plugin package
+    #                     logger.info(f"Attempting to import {name}")
+    #                     plugin_module = importlib.import_module(name)
+                        
+    #                     # Check if the module has a setup function
+    #                     if hasattr(plugin_module, 'setup'):
+    #                         logger.info(f"Module {name} has setup function")
+    #                         metadata = plugin_module.setup()
+    #                         discovered.append(metadata)
+                            
+    #                         # Register or update the plugin
+    #                         Plugin.register_plugin(
+    #                             name=metadata.get('name', name),
+    #                             slug=metadata.get('slug', name.lower()),
+    #                             version=metadata.get('version', '0.1.0'),
+    #                             entry_point=metadata.get('entry_point', f"{name}:plugin"),
+    #                             description=metadata.get('description'),
+    #                             author=metadata.get('author'),
+    #                             homepage=metadata.get('homepage'),
+    #                             config_schema=metadata.get('config_schema'),
+    #                             is_system=metadata.get('is_system', False),
+    #                             enabled_for_all=metadata.get('enabled_for_all', False)
+    #                         )
+    #                         logger.info(f"Successfully registered plugin: {name}")
+    #                     else:
+    #                         logger.warning(f"Module {name} does not have a setup function")
+                            
+    #                 except Exception as e:
+    #                     logger.error(f"Error loading plugin {name}: {str(e)}")
+    #                     logger.error(f"Traceback: {traceback.format_exc()}")
+    #     except Exception as e:
+    #         logger.error(f"Error during module discovery: {str(e)}")
+    #         logger.error(f"Traceback: {traceback.format_exc()}")
+        
+    #     # Reload plugins from the database
+    #     self._load_all_plugins()
+        
+    #     logger.info(f"Discovered {len(discovered)} plugins: {[m.get('name') for m in discovered if isinstance(m, dict) and 'name' in m]}")
+    #     return discovered
     def discover_plugins(self, plugins_dir='plugins'):
         """Discover plugins in the specified directory"""
         logger.info(f"Discovering plugins in {plugins_dir}")
+        
+        # Get absolute path to plugins directory
+        if not os.path.isabs(plugins_dir):
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            plugins_dir = os.path.join(base_dir, plugins_dir)
+        
+        logger.info(f"Using plugins directory: {plugins_dir}")
         
         # Check if directory exists
         if not os.path.exists(plugins_dir):
@@ -58,74 +139,109 @@ class PluginManager:
         
         # Add plugins directory to Python path if not already there
         if plugins_dir not in sys.path:
-            plugins_path = os.path.abspath(plugins_dir)
-            sys.path.insert(0, plugins_path)
-            logger.info(f"Added {plugins_path} to Python path")
+            sys.path.insert(0, plugins_dir)
+            logger.info(f"Added {plugins_dir} to Python path")
         
         # Discover plugin modules
         discovered = []
-        try:
-            # Get list of module finders - this helps debug module finding issues
-            module_paths = [plugins_dir]
-            logger.info(f"Looking for modules in paths: {module_paths}")
+        for item in os.listdir(plugins_dir):
+            item_path = os.path.join(plugins_dir, item)
             
-            for finder, name, ispkg in pkgutil.iter_modules(module_paths):
-                logger.info(f"Found module: {name}, is package: {ispkg}")
-                
-                if ispkg:  # Only consider packages, not individual modules
-                    try:
-                        # Import the plugin package
-                        logger.info(f"Attempting to import {name}")
-                        plugin_module = importlib.import_module(name)
-                        
-                        # Check if the module has a setup function
-                        if hasattr(plugin_module, 'setup'):
-                            logger.info(f"Module {name} has setup function")
+            # Check if it's a directory (plugin package)
+            if os.path.isdir(item_path) and os.path.exists(os.path.join(item_path, '__init__.py')):
+                try:
+                    logger.info(f"Found potential plugin package: {item}")
+                    
+                    # Try to import the plugin package
+                    plugin_module = importlib.import_module(item)
+                    
+                    # Check if it has a setup function
+                    if hasattr(plugin_module, 'setup'):
+                        logger.info(f"Module {item} has setup function")
+                        try:
                             metadata = plugin_module.setup()
-                            discovered.append(metadata)
-                            
-                            # Register or update the plugin
-                            Plugin.register_plugin(
-                                name=metadata.get('name', name),
-                                slug=metadata.get('slug', name.lower()),
-                                version=metadata.get('version', '0.1.0'),
-                                entry_point=metadata.get('entry_point', f"{name}:plugin"),
-                                description=metadata.get('description'),
-                                author=metadata.get('author'),
-                                homepage=metadata.get('homepage'),
-                                config_schema=metadata.get('config_schema'),
-                                is_system=metadata.get('is_system', False),
-                                enabled_for_all=metadata.get('enabled_for_all', False)
-                            )
-                            logger.info(f"Successfully registered plugin: {name}")
-                        else:
-                            logger.warning(f"Module {name} does not have a setup function")
-                            
-                    except Exception as e:
-                        logger.error(f"Error loading plugin {name}: {str(e)}")
-                        logger.error(f"Traceback: {traceback.format_exc()}")
-        except Exception as e:
-            logger.error(f"Error during module discovery: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
+                            if metadata:
+                                discovered.append(metadata)
+                                
+                                # Register or update the plugin
+                                plugin = Plugin.register_plugin(
+                                    name=metadata.get('name', item),
+                                    slug=metadata.get('slug', item.lower()),
+                                    version=metadata.get('version', '0.1.0'),
+                                    entry_point=metadata.get('entry_point', f"{item}:plugin"),
+                                    description=metadata.get('description'),
+                                    author=metadata.get('author'),
+                                    homepage=metadata.get('homepage'),
+                                    config_schema=metadata.get('config_schema'),
+                                    is_system=metadata.get('is_system', False),
+                                    enabled_for_all=metadata.get('enabled_for_all', False)
+                                )
+                                logger.info(f"Successfully registered plugin: {metadata.get('name', item)}")
+                            else:
+                                logger.warning(f"Plugin {item} setup() function returned no metadata")
+                        except Exception as e:
+                            logger.error(f"Error in setup() function for {item}: {str(e)}")
+                            import traceback
+                            logger.error(f"Traceback: {traceback.format_exc()}")
+                    else:
+                        logger.warning(f"Module {item} does not have a setup function")
+                        
+                except Exception as e:
+                    logger.error(f"Error loading plugin {item}: {str(e)}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
         
         # Reload plugins from the database
         self._load_all_plugins()
-        
-        logger.info(f"Discovered {len(discovered)} plugins: {[m.get('name') for m in discovered if isinstance(m, dict) and 'name' in m]}")
-        return discovered
     
+        logger.info(f"Discovered {len(discovered)} plugins")
+        return discovered
+    # def activate_plugin(self, plugin_slug):
+    #     """Activate a plugin"""
+    #     plugin = self.plugins.get(plugin_slug)
+    #     if not plugin:
+    #         logger.error(f"Plugin {plugin_slug} not found")
+    #         return False
+        
+    #     plugin.status = PluginStatus.ACTIVE.value
+    #     db.session.commit()
+    #     logger.info(f"Activated plugin: {plugin.name}")
+    #     return True
     def activate_plugin(self, plugin_slug):
         """Activate a plugin"""
-        plugin = self.plugins.get(plugin_slug)
+        plugin = Plugin.query.filter_by(slug=plugin_slug).first()
         if not plugin:
             logger.error(f"Plugin {plugin_slug} not found")
             return False
         
-        plugin.status = PluginStatus.ACTIVE.value
-        db.session.commit()
-        logger.info(f"Activated plugin: {plugin.name}")
-        return True
-    
+        try:
+            # Log the current status
+            logger.info(f"Activating plugin {plugin_slug}. Current status: {plugin.status}")
+            
+            # Test that we can load the plugin first
+            plugin_class = plugin.load()
+            if not plugin_class:
+                logger.error(f"Failed to load plugin {plugin_slug}")
+                return False
+            
+            # Update status and immediately commit
+            plugin.status = PluginStatus.ACTIVE.value
+            db.session.commit()
+            
+            # Reload plugin and verify status
+            db.session.refresh(plugin)
+            if plugin.status != PluginStatus.ACTIVE.value:
+                logger.error(f"Failed to update plugin status. Expected {PluginStatus.ACTIVE.value}, got {plugin.status}")
+                return False
+                
+            logger.info(f"Activated plugin: {plugin.name}")
+            self.plugins[plugin_slug] = plugin  # Update the cached plugin in the manager
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error activating plugin {plugin_slug}: {str(e)}")
+            return False
+
     def deactivate_plugin(self, plugin_slug):
         """Deactivate a plugin"""
         plugin = self.plugins.get(plugin_slug)
@@ -143,6 +259,44 @@ class PluginManager:
         
         return True
     
+    # def get_plugin_instance(self, plugin_slug, tenant_id=None):
+    #     """Get an instance of the plugin for a specific tenant"""
+    #     # Check if we already have an instance
+    #     instance_key = f"{plugin_slug}:{tenant_id}" if tenant_id else plugin_slug
+    #     if instance_key in self.plugin_instances:
+    #         return self.plugin_instances[instance_key]
+        
+    #     # Get the plugin
+    #     plugin = self.plugins.get(plugin_slug)
+    #     if not plugin or plugin.status != PluginStatus.ACTIVE.value:
+    #         logger.error(f"Plugin {plugin_slug} not found or not active")
+    #         return None
+        
+    #     # Load the plugin
+    #     plugin_class = plugin.load()
+    #     if not plugin_class:
+    #         return None
+        
+    #     # Get tenant-specific configuration if applicable
+    #     config = {}
+    #     if tenant_id:
+    #         tenant_plugin = TenantPlugin.query.filter_by(
+    #             tenant_id=tenant_id,
+    #             plugin_id=plugin.id,
+    #             enabled=True
+    #         ).first()
+            
+    #         if tenant_plugin:
+    #             config = tenant_plugin.config
+        
+    #     # Create an instance
+    #     try:
+    #         instance = plugin_class(config)
+    #         self.plugin_instances[instance_key] = instance
+    #         return instance
+    #     except Exception as e:
+    #         logger.error(f"Error instantiating plugin {plugin_slug}: {str(e)}")
+    #         return None
     def get_plugin_instance(self, plugin_slug, tenant_id=None):
         """Get an instance of the plugin for a specific tenant"""
         # Check if we already have an instance
@@ -152,8 +306,17 @@ class PluginManager:
         
         # Get the plugin
         plugin = self.plugins.get(plugin_slug)
-        if not plugin or plugin.status != PluginStatus.ACTIVE.value:
-            logger.error(f"Plugin {plugin_slug} not found or not active")
+        if not plugin:
+            # Try to get from database directly
+            plugin = Plugin.query.filter_by(slug=plugin_slug).first()
+            if plugin:
+                self.plugins[plugin_slug] = plugin
+            else:
+                logger.error(f"Plugin {plugin_slug} not found")
+                return None
+        
+        if plugin.status != PluginStatus.ACTIVE.value:
+            logger.error(f"Plugin {plugin_slug} is not active. Current status: {plugin.status}")
             return None
         
         # Load the plugin
@@ -172,6 +335,9 @@ class PluginManager:
             
             if tenant_plugin:
                 config = tenant_plugin.config
+            elif not plugin.enabled_for_all:
+                logger.warning(f"Plugin {plugin_slug} is not enabled for tenant {tenant_id}")
+                return None
         
         # Create an instance
         try:
@@ -180,8 +346,9 @@ class PluginManager:
             return instance
         except Exception as e:
             logger.error(f"Error instantiating plugin {plugin_slug}: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return None
-    
     def get_tenant_plugins(self, tenant_id):
         """Get all active plugins for a specific tenant"""
         # Get system-wide plugins that are enabled for all tenants

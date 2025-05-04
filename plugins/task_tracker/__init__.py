@@ -36,5 +36,5 @@ def setup():
             }
         },
         'is_system': False,
-        'enabled_for_all': False
+        'enabled_for_all': True
     }
