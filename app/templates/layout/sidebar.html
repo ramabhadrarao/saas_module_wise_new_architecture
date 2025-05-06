@@ -114,7 +114,11 @@
                 
                 <!-- Plugin menu items - dynamically generated from installed plugins -->
                 {% if current_user.tenant and current_user.is_authenticated %}
-                    {% set tenant_active_plugins = get_tenant_active_plugins(current_user.tenant.id) if 'get_tenant_active_plugins' in globals() %}
+                    {% if get_tenant_active_plugins is defined %}
+                    {% set tenant_active_plugins = get_tenant_active_plugins(current_user.tenant.id) %}
+                {% else %}
+                    {% set tenant_active_plugins = [] %}
+                {% endif %}
                     {% if tenant_active_plugins %}
                         <!-- Show plugin items in a dropdown if there are multiple -->
                         {% if tenant_active_plugins|length > 1 %}

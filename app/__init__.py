@@ -18,9 +18,32 @@ login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access this page'
 login_manager.login_message_category = 'warning'
 
-# plugins_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'plugins')
-# if plugins_path not in sys.path:
-#     sys.path.insert(0, plugins_path)
+# Function to register all plugin blueprints
+def register_all_plugin_blueprints(app):
+    """Register blueprints for all plugins during app initialization"""
+    try:
+        from app.plugins.plugin import Plugin
+        from app.plugins.plugin_manager import PluginManager
+        
+        plugins = Plugin.query.all()
+        for plugin in plugins:
+            try:
+                # Load the plugin class
+                plugin_class = plugin.load()
+                if plugin_class:
+                    # Initialize the plugin
+                    instance = plugin_class()
+                    
+                    # Register blueprint if the plugin provides one
+                    if hasattr(instance, 'get_blueprint'):
+                        blueprint = instance.get_blueprint()
+                        if blueprint and blueprint.name not in app.blueprints:
+                            app.register_blueprint(blueprint)
+                            app.logger.info(f"Pre-registered blueprint for plugin {plugin.slug}")
+            except Exception as e:
+                app.logger.error(f"Error pre-registering blueprint for plugin {plugin.slug}: {str(e)}")
+    except Exception as e:
+        app.logger.error(f"Error registering all plugin blueprints: {str(e)}")
 
 def create_app():
     """Application factory pattern for Flask app creation"""
@@ -51,8 +74,8 @@ def create_app():
     @app.context_processor
     def inject_now():
         return {'now': datetime.datetime.now()}
+    
     # Add a context processor for plugin menu items
-    # Add context processor for plugin menu items
     @app.context_processor
     def inject_plugin_menu_items():
         """Inject plugin menu items into all templates"""
@@ -87,7 +110,6 @@ def create_app():
         
         return {'plugin_menu_items': plugin_menu_items}
     
-    # Add authentication middleware
     # Add to create_app() function after other context processors
     @app.context_processor
     def inject_plugin_context():
@@ -157,6 +179,25 @@ def create_app():
         return {
             'get_tenant_active_plugins': get_tenant_active_plugins
         }
+    
+    @app.context_processor
+    def plugin_utility_processor():
+        """Add plugin utility functions to template context"""
+        def empty_plugin_list(*args, **kwargs):
+            return []
+            
+        try:
+            from app.plugins.plugin_manager import PluginManager
+            plugin_manager = PluginManager()
+            return {
+                'get_tenant_active_plugins': plugin_manager.get_tenant_plugins
+            }
+        except Exception as e:
+            app.logger.warning(f"Unable to provide plugin utility functions: {str(e)}")
+            return {
+                'get_tenant_active_plugins': empty_plugin_list
+            }
+    
     @app.context_processor
     def inject_plugin_data():
         """Inject plugin data for templates"""
@@ -224,6 +265,7 @@ def create_app():
         return {
             'get_tenant_active_plugins': get_tenant_active_plugins
         }
+    
     @app.before_request
     def require_login():
         # Public routes that don't require authentication
@@ -273,6 +315,7 @@ def create_app():
         app.register_blueprint(plugin_api)
     except ImportError:
         pass  # Plugin module not implemented yet
+    
     # Register plugin commands
     try:
         from app.plugins.commands import register_commands
@@ -280,6 +323,7 @@ def create_app():
         app.logger.info("Plugin CLI commands registered")
     except ImportError as e:
         app.logger.warning(f"Failed to register plugin commands: {str(e)}")
+    
     # Register error handlers
     from app.core.error_handlers import register_handlers
     register_handlers(app)
@@ -291,30 +335,7 @@ def create_app():
             Role.insert_default_roles()
         except Exception as e:
             app.logger.error(f"Error inserting default roles: {str(e)}")
-        # # Debug plugin discovery
-        # try:
-        #     from sqlalchemy import inspect
-        #     inspector = inspect(db.engine)
-        #     app.logger.info(f"Available tables: {inspector.get_table_names()}")
-            
-        #     # Check if plugins table exists
-        #     if 'plugins' in inspector.get_table_names():
-        #         app.logger.info("Plugins table exists in database")
-                
-        #         # Check if paths are correct
-        #         import os
-        #         project_root = os.path.dirname(os.path.dirname(__file__))
-        #         plugins_dir = os.path.join(project_root, 'plugins')
-        #         app.logger.info(f"Project root: {project_root}")
-        #         app.logger.info(f"Plugins directory: {plugins_dir}")
-        #         app.logger.info(f"Plugins directory exists: {os.path.exists(plugins_dir)}")
-                
-        #         if os.path.exists(plugins_dir):
-        #             app.logger.info(f"Plugins directory contents: {os.listdir(plugins_dir)}")
-        #     else:
-        #         app.logger.warning("Plugins table does not exist in database")
-        # except Exception as e:
-        #     app.logger.error(f"Error debugging plugin discovery: {str(e)}")
+        
         # Initialize plugin manager - but only after checking if tables exist
         try:
             from sqlalchemy import inspect
@@ -324,20 +345,17 @@ def create_app():
             inspector = inspect(db.engine)
             if 'plugins' in inspector.get_table_names():
                 plugin_manager = PluginManager()
-                # Register plugin blueprints
+                
+                # Register ALL plugin blueprints regardless of status
+                register_all_plugin_blueprints(app)
+                
+                # Load active plugin data (no blueprint registration)
                 plugin_manager.load_plugin_blueprints(app)
                 app.logger.info("Plugin manager initialized successfully")
             else:
                 app.logger.info("Plugins table not yet created - skipping plugin manager initialization")
         except Exception as e:
             app.logger.error(f"Error initializing plugin manager: {str(e)}")
-        # try:
-        #     from app.plugins.plugin_manager import PluginManager
-        #     plugin_manager = PluginManager()
-        #     plugin_manager.load_plugin_blueprints(app)
-        #     app.logger.info("Plugin manager initialized and blueprints loaded")
-        # except Exception as e:
-        #     app.logger.error(f"Error initializing plugin manager: {str(e)}")
     
     return app
 

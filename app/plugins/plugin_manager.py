@@ -216,33 +216,23 @@ class PluginManager:
                 logger.error(f"Failed to load plugin {plugin_slug}")
                 return False
             
-            # Initialize plugin instance and register its blueprint
-            instance = plugin_class()
-            
-            # Register blueprint if the plugin provides one
-            if hasattr(instance, 'get_blueprint'):
-                from flask import current_app
-                blueprint = instance.get_blueprint()
-                if blueprint:
-                    try:
-                        # Check if blueprint is already registered
-                        if blueprint.name not in current_app.blueprints:
-                            current_app.register_blueprint(blueprint)
-                            logger.info(f"Registered blueprint for plugin {plugin_slug}")
-                    except Exception as e:
-                        logger.error(f"Error registering blueprint for plugin {plugin_slug}: {str(e)}")
-                        return False
-            
+            # Initialize plugin instance but don't try to register blueprint
+            try:
+                instance = plugin_class()
+                
+                # Store the instance for later use
+                self.plugin_instances[plugin_slug] = instance
+                
+                # Log the successful initialization
+                logger.info(f"Successfully initialized plugin {plugin_slug}")
+            except Exception as e:
+                logger.error(f"Error initializing plugin {plugin_slug}: {str(e)}")
+                return False
+                
             # Update status and immediately commit
             plugin.status = PluginStatus.ACTIVE.value
             db.session.commit()
             
-            # Reload plugin and verify status
-            db.session.refresh(plugin)
-            if plugin.status != PluginStatus.ACTIVE.value:
-                logger.error(f"Failed to update plugin status. Expected {PluginStatus.ACTIVE.value}, got {plugin.status}")
-                return False
-                    
             logger.info(f"Activated plugin: {plugin.name}")
             self.plugins[plugin_slug] = plugin  # Update the cached plugin in the manager
             return True
