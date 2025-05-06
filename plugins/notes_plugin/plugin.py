@@ -1,5 +1,5 @@
 """Notes plugin implementation"""
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, g, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, g, abort
 from flask_login import current_user, login_required
 from app.auth.rbac import permission_required
 from app.tenant.middleware import tenant_required, get_current_tenant
@@ -39,23 +39,23 @@ class NotesPlugin:
         )
         
         @bp.route('/')
-        # @login_required
-        # @tenant_required
+        @login_required
         def index():
             """Notes dashboard"""
-            # Get the current tenant and user
-            tenant = get_current_tenant()
+            # Get the current user ID directly
+            user_id = current_user.id
             category = request.args.get('category')
             include_archived = request.args.get('archived', 'false') == 'true'
             
+            # Get notes using user_id
             if category:
-                notes = Note.get_notes_by_category(current_user.id, category, include_archived)
+                notes = Note.get_notes_by_category(user_id, category, include_archived)
             else:
-                notes = Note.get_notes_for_user(current_user.id, include_archived)
+                notes = Note.get_notes_for_user(user_id, include_archived)
             
             # Get all distinct categories for the filter
             categories = db.session.query(Note.category).filter(
-                Note.user_id == current_user.id,
+                Note.user_id == user_id,
                 Note.category != None,
                 Note.category != ''
             ).distinct().all()
@@ -72,17 +72,24 @@ class NotesPlugin:
             )
         
         @bp.route('/create', methods=['GET', 'POST'])
-        # @login_required
-        # @tenant_required
+        @login_required
         def create():
             """Create a new note"""
+            # Get the tenant - with a fallback
             tenant = get_current_tenant()
+            tenant_id = tenant.id if tenant else current_user.tenant_id
+            
+            # If tenant_id is still None, handle the error gracefully
+            if tenant_id is None:
+                flash('Unable to determine tenant context. Please contact support.', 'danger')
+                return redirect(url_for('notes_plugin.index'))
+                
             form = NoteForm()
             
             # Check if user has reached the limit
             user_notes_count = Note.query.filter_by(
                 user_id=current_user.id,
-                tenant_id=tenant.id
+                tenant_id=tenant_id
             ).count()
             
             if user_notes_count >= self.max_notes_per_user:
@@ -94,7 +101,7 @@ class NotesPlugin:
                 category = form.category.data if self.enable_categories else None
                 
                 note = Note.create_note(
-                    tenant_id=tenant.id,
+                    tenant_id=tenant_id,
                     user_id=current_user.id,
                     title=form.title.data,
                     content=form.content.data,
@@ -115,11 +122,9 @@ class NotesPlugin:
             )
         
         @bp.route('/<int:note_id>', methods=['GET'])
-        # @login_required
-        # @tenant_required
+        @login_required
         def view(note_id):
             """View a note"""
-            tenant = get_current_tenant()
             note = Note.query.get_or_404(note_id)
             
             # Check if user owns the note or has access
@@ -127,17 +132,18 @@ class NotesPlugin:
                 abort(403)
             
             # Check if note belongs to the current tenant
-            if note.tenant_id != tenant.id:
+            tenant = get_current_tenant()
+            tenant_id = tenant.id if tenant else current_user.tenant_id
+            
+            if tenant_id and note.tenant_id != tenant_id:
                 abort(404)
             
             return render_template('notes_plugin/view.html', note=note)
         
         @bp.route('/<int:note_id>/edit', methods=['GET', 'POST'])
-        # @login_required
-        # @tenant_required
+        @login_required
         def edit(note_id):
             """Edit a note"""
-            tenant = get_current_tenant()
             note = Note.query.get_or_404(note_id)
             
             # Check if user owns the note
@@ -145,7 +151,10 @@ class NotesPlugin:
                 abort(403)
             
             # Check if note belongs to the current tenant
-            if note.tenant_id != tenant.id:
+            tenant = get_current_tenant()
+            tenant_id = tenant.id if tenant else current_user.tenant_id
+            
+            if tenant_id and note.tenant_id != tenant_id:
                 abort(404)
             
             form = NoteForm(obj=note)
@@ -169,11 +178,9 @@ class NotesPlugin:
             )
         
         @bp.route('/<int:note_id>/pin', methods=['POST'])
-        # @login_required
-        # @tenant_required
+        @login_required
         def toggle_pin(note_id):
             """Toggle pin status of a note"""
-            tenant = get_current_tenant()
             note = Note.query.get_or_404(note_id)
             
             # Check if user owns the note
@@ -181,7 +188,10 @@ class NotesPlugin:
                 abort(403)
             
             # Check if note belongs to the current tenant
-            if note.tenant_id != tenant.id:
+            tenant = get_current_tenant()
+            tenant_id = tenant.id if tenant else current_user.tenant_id
+            
+            if tenant_id and note.tenant_id != tenant_id:
                 abort(404)
             
             note.is_pinned = not note.is_pinned
@@ -191,11 +201,9 @@ class NotesPlugin:
             return redirect(url_for('notes_plugin.index'))
         
         @bp.route('/<int:note_id>/archive', methods=['POST'])
-        # @login_required
-        # @tenant_required
+        @login_required
         def toggle_archive(note_id):
             """Toggle archive status of a note"""
-            tenant = get_current_tenant()
             note = Note.query.get_or_404(note_id)
             
             # Check if user owns the note
@@ -203,7 +211,10 @@ class NotesPlugin:
                 abort(403)
             
             # Check if note belongs to the current tenant
-            if note.tenant_id != tenant.id:
+            tenant = get_current_tenant()
+            tenant_id = tenant.id if tenant else current_user.tenant_id
+            
+            if tenant_id and note.tenant_id != tenant_id:
                 abort(404)
             
             note.is_archived = not note.is_archived
@@ -213,11 +224,9 @@ class NotesPlugin:
             return redirect(url_for('notes_plugin.index'))
         
         @bp.route('/<int:note_id>/delete', methods=['POST'])
-        # @login_required
-        # @tenant_required
+        @login_required
         def delete(note_id):
             """Delete a note"""
-            tenant = get_current_tenant()
             note = Note.query.get_or_404(note_id)
             
             # Check if user owns the note
@@ -225,7 +234,10 @@ class NotesPlugin:
                 abort(403)
             
             # Check if note belongs to the current tenant
-            if note.tenant_id != tenant.id:
+            tenant = get_current_tenant()
+            tenant_id = tenant.id if tenant else current_user.tenant_id
+            
+            if tenant_id and note.tenant_id != tenant_id:
                 abort(404)
             
             db.session.delete(note)
@@ -254,14 +266,12 @@ class NotesPlugin:
     def install(self, tenant_id=None):
         """Custom install hook - create database tables"""
         # This would create the necessary tables for the plugin
-        # In a real-world scenario, you'd use migrations
         try:
             from app import db
             from .models import Note
             
             # Create tables if they don't exist
-            # This is simplified; in production, use Flask-Migrate
-            db.create_all()
+            Note.__table__.create(db.engine, checkfirst=True)
             logger.info("Notes plugin installed successfully")
             return True
         except Exception as e:
