@@ -15,7 +15,12 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('main.index') }}">
                         <span class="nav-link-icon">
-                            <!-- Dashboard icon SVG here -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                                <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                                <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                            </svg>
                         </span>
                         <span class="nav-link-title">
                             Dashboard
@@ -28,7 +33,12 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#navbar-tenant" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
                         <span class="nav-link-icon">
-                            <!-- Tenant icon SVG here -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M3 21h18" />
+                                <path d="M5 21v-14l8 -4v18" />
+                                <path d="M19 21v-10l-6 -4" />
+                            </svg>
                         </span>
                         <span class="nav-link-title">
                             Tenants
@@ -43,145 +53,128 @@
                 </li>
                 {% endif %}
                 
-<!-- User management - visible based on permissions -->
-{% if current_user.is_authenticated and (current_user.has_permission('view_users') or current_user.is_tenant_admin or current_user.is_system_admin) %}
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#navbar-users" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
-        <span class="nav-link-icon">
-            <!-- Users icon SVG here -->
-        </span>
-        <span class="nav-link-title">
-            Users
-        </span>
-    </a>
-    <div class="dropdown-menu">
-        <a class="dropdown-item" href="{{ url_for('auth.users') }}">User List</a>
-        {% if current_user.has_permission('create_user') %}
-        <a class="dropdown-item" href="{{ url_for('auth.create_user') }}">Create User</a>
-        {% endif %}
-        {% if current_user.has_permission('view_roles') %}
-        <a class="dropdown-item" href="{{ url_for('auth.roles') }}">Roles & Permissions</a>
-        {% endif %}
-    </div>
-</li>
-{% endif %}                
-                <!-- Plugins - visible based on permissions -->
-                <!-- Plugins - visible based on permissions -->
-{% if current_user.has_permission('view_plugins') or current_user.is_system_admin %}
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#navbar-plugins" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
-        <span class="nav-link-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
-                <path d="M9 12v8.248c0 .463 .114 .754 .654 .754c.5 0 .882 -.408 .882 -.914v-7.088"></path>
-                <path d="M15 12v8.248c0 .463 -.114 .754 -.654 .754c-.5 0 -.882 -.408 -.882 -.914v-7.088"></path>
-                <path d="M12 3c-.463 0 -.814 .082 -1.054 .241c-.241 .16 -.3 .361 -.328 .66c-.028 .28 -.028 .996 -.028 .996l-1.59 -1.897l-.001 .003c0 -.012 -.927 1.273 -.927 1.273c-.497 .582 -.497 .645 -.497 .878c0 .232 .139 .442 .37 .602c.23 .16 .581 .24 1.045 .24h5.992c.464 0 .814 -.082 1.054 -.241c.241 -.159 .3 -.36 .328 -.66c.028 -.28 .028 -.996 .028 -.996l1.59 1.897l.001 -.003c0 .012 .927 -1.273 .927 -1.273c.497 -.582 .497 -.645 .497 -.878c0 -.232 -.139 -.441 -.37 -.602c-.23 -.16 -.581 -.24 -1.045 -.24h-5.992z"></path>
-            </svg>
-        </span>
-        <span class="nav-link-title">
-            Plugins
-        </span>
-    </a>
-    <div class="dropdown-menu">
-        <a class="dropdown-item" href="{{ url_for('plugins.index') }}">All Plugins</a>
-        <a class="dropdown-item" href="{{ url_for('plugins.marketplace') }}">Marketplace</a>
-        {% if current_user.has_permission('configure_plugin') %}
-        <a class="dropdown-item" href="{{ url_for('plugins.logs') }}">Plugin Logs</a>
-        {% endif %}
-        {% if current_user.is_system_admin %}
-        <a class="dropdown-item" href="{{ url_for('plugins.admin') }}">Plugin Administration</a>
-        {% endif %}
-    </div>
-</li>
-{% endif %}
-<!-- Plugin menu items -->
-{% if plugin_menu_items %}
-<li class="nav-item">
-    <a class="nav-link dropdown-toggle" href="#navbar-plugins" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
-        <span class="nav-link-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
-                <path d="M12 3c-.866 0 -1.5 .397 -1.5 .866v1.268l-3.092 -1.634c-.745 -.394 -1.3 0 -1.3 .874v3.25c0 .876 .555 1.27 1.3 .874l3.092 -1.634v1.268c0 .47 .634 .866 1.5 .866c.866 0 1.5 -.397 1.5 -.866v-1.268l3.092 1.634c.745 .394 1.3 0 1.3 -.874v-3.25c0 -.876 -.555 -1.27 -1.3 -.874l-3.092 1.634v-1.268c0 -.47 -.634 -.866 -1.5 -.866z"></path>
-            </svg>
-        </span>
-        <span class="nav-link-title">
-            Installed Plugins
-        </span>
-    </a>
-    <div class="dropdown-menu">
-        {% for item in plugin_menu_items %}
-            {% if not current_user.has_permission or current_user.has_permission(item.permission|default('view_plugins')) %}
-            <a class="dropdown-item" href="{{ item.url }}">
-                {{ item.name }}
-            </a>
-            {% endif %}
-        {% endfor %}
-    </div>
-</li>
-{% endif %}
-
-
-
-<!-- Plugin menu items -->
-{% if plugin_menu_items %}
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#navbar-plugins-menu" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
-        <span class="nav-link-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
-                <path d="M12 3c-.866 0 -1.5 .397 -1.5 .866v1.268l-3.092 -1.634c-.745 -.394 -1.3 0 -1.3 .874v3.25c0 .876 .555 1.27 1.3 .874l3.092 -1.634v1.268c0 .47 .634 .866 1.5 .866c.866 0 1.5 -.397 1.5 -.866v-1.268l3.092 1.634c.745 .394 1.3 0 1.3 -.874v-3.25c0 -.876 -.555 -1.27 -1.3 -.874l-3.092 1.634v-1.268c0 -.47 -.634 -.866 -1.5 -.866z"></path>
-            </svg>
-        </span>
-        <span class="nav-link-title">
-            Plugins
-        </span>
-    </a>
-    <div class="dropdown-menu">
-        {% for item in plugin_menu_items %}
-            {% if current_user.has_permission(item.permission)|default(true) %}
-            <a class="dropdown-item" href="{{ item.url }}">
-                {% if item.icon %}
-                <span class="nav-link-icon d-md-none d-lg-inline-block">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="{{ item.icon_path|default('M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0') }}"></path>
-                    </svg>
-                </span>
+                <!-- User management - visible based on permissions -->
+                {% if current_user.is_authenticated and (current_user.has_permission('view_users') or current_user.is_tenant_admin or current_user.is_system_admin) %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#navbar-users" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+                        <span class="nav-link-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                                <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                            </svg>
+                        </span>
+                        <span class="nav-link-title">
+                            Users
+                        </span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('auth.users') }}">User List</a>
+                        {% if current_user.has_permission('create_user') %}
+                        <a class="dropdown-item" href="{{ url_for('auth.create_user') }}">Create User</a>
+                        {% endif %}
+                        {% if current_user.has_permission('view_roles') %}
+                        <a class="dropdown-item" href="{{ url_for('auth.roles') }}">Roles & Permissions</a>
+                        {% endif %}
+                    </div>
+                </li>
                 {% endif %}
-                {{ item.name }}
-            </a>
-            {% endif %}
-        {% endfor %}
-    </div>
-</li>
-{% endif %}
-
-<!-- Individual plugin direct menu items -->
-{% for item in plugin_menu_items %}
-    {% if current_user.has_permission(item.permission)|default(true) and item.show_in_main_menu|default(false) %}
-    <li class="nav-item">
-        <a class="nav-link" href="{{ item.url }}">
-            <span class="nav-link-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                    <path d="{{ item.icon_path|default('M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0') }}"></path>
-                </svg>
-            </span>
-            <span class="nav-link-title">
-                {{ item.name }}
-            </span>
-        </a>
-    </li>
-    {% endif %}
-{% endfor %}
-
-
-
-
-
+                
+                <!-- Plugins management - visible based on permissions -->
+                {% if current_user.has_permission('view_plugins') or current_user.is_system_admin %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#navbar-plugins" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+                        <span class="nav-link-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+                                <path d="M9 12v8.248c0 .463 .114 .754 .654 .754c.5 0 .882 -.408 .882 -.914v-7.088"></path>
+                                <path d="M15 12v8.248c0 .463 -.114 .754 -.654 .754c-.5 0 -.882 -.408 -.882 -.914v-7.088"></path>
+                                <path d="M12 3c-.463 0 -.814 .082 -1.054 .241c-.241 .16 -.3 .361 -.328 .66c-.028 .28 -.028 .996 -.028 .996l-1.59 -1.897l-.001 .003c0 -.012 -.927 1.273 -.927 1.273c-.497 .582 -.497 .645 -.497 .878c0 .232 .139 .442 .37 .602c.23 .16 .581 .24 1.045 .24h5.992c.464 0 .814 -.082 1.054 -.241c.241 -.159 .3 -.36 .328 -.66c.028 -.28 .028 -.996 .028 -.996l1.59 1.897l.001 -.003c0 .012 .927 -1.273 .927 -1.273c.497 -.582 .497 -.645 .497 -.878c0 -.232 -.139 -.441 -.37 -.602c-.23 -.16 -.581 -.24 -1.045 -.24h-5.992z"></path>
+                            </svg>
+                        </span>
+                        <span class="nav-link-title">
+                            Plugins
+                        </span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('plugins.index') }}">All Plugins</a>
+                        <a class="dropdown-item" href="{{ url_for('plugins.marketplace') }}">Marketplace</a>
+                        {% if current_user.has_permission('configure_plugin') %}
+                        <a class="dropdown-item" href="{{ url_for('plugins.logs') }}">Plugin Logs</a>
+                        {% endif %}
+                        {% if current_user.is_system_admin %}
+                        <a class="dropdown-item" href="{{ url_for('plugins.admin') }}">Plugin Administration</a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endif %}
+                
+                <!-- Plugin menu items - dynamically generated from installed plugins -->
+                {% if current_user.tenant and current_user.is_authenticated %}
+                    {% set tenant_active_plugins = get_tenant_active_plugins(current_user.tenant.id) if 'get_tenant_active_plugins' in globals() %}
+                    {% if tenant_active_plugins %}
+                        <!-- Show plugin items in a dropdown if there are multiple -->
+                        {% if tenant_active_plugins|length > 1 %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#navbar-plugins-menu" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+                                <span class="nav-link-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+                                        <path d="M12 3c-.866 0 -1.5 .397 -1.5 .866v1.268l-3.092 -1.634c-.745 -.394 -1.3 0 -1.3 .874v3.25c0 .876 .555 1.27 1.3 .874l3.092 -1.634v1.268c0 .47 .634 .866 1.5 .866c.866 0 1.5 -.397 1.5 -.866v-1.268l3.092 1.634c.745 .394 1.3 0 1.3 -.874v-3.25c0 -.876 -.555 -1.27 -1.3 -.874l-3.092 1.634v-1.268c0 -.47 -.634 -.866 -1.5 -.866z"></path>
+                                    </svg>
+                                </span>
+                                <span class="nav-link-title">
+                                    Installed Plugins
+                                </span>
+                            </a>
+                            <div class="dropdown-menu">
+                                {% for plugin in tenant_active_plugins %}
+                                    {% for item in plugin.menu_items %}
+                                        {% if not item.permission or current_user.has_permission(item.permission) %}
+                                        <a class="dropdown-item" href="{{ item.url }}">
+                                            {% if item.icon %}
+                                            <span class="dropdown-item-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                    <path d="{{ item.icon_path|default('M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0') }}"></path>
+                                                </svg>
+                                            </span>
+                                            {% endif %}
+                                            {{ item.name }}
+                                        </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </li>
+                        {% else %}
+                            <!-- Show plugin items directly in the sidebar if there's only one plugin -->
+                            {% for plugin in tenant_active_plugins %}
+                                {% for item in plugin.menu_items %}
+                                    {% if not item.permission or current_user.has_permission(item.permission) %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ item.url }}">
+                                            <span class="nav-link-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                    <path d="{{ item.icon_path|default('M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0') }}"></path>
+                                                </svg>
+                                            </span>
+                                            <span class="nav-link-title">
+                                                {{ item.name }}
+                                            </span>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
             </ul>
         </div>
     </div>

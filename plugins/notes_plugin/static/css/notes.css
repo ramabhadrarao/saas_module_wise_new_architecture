@@ -1,0 +1,35 @@
+/* Notes Plugin CSS */
+.notes-content {
+    white-space: pre-line;
+    max-height: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.note-content {
+    white-space: pre-line;
+    line-height: 1.6;
+}
+
+/* Card styling */
+.card.border-primary {
+    border-color: var(--tblr-primary) !important;
+    border-width: 2px;
+}
+
+.card.bg-muted {
+    background-color: rgba(var(--tblr-muted-rgb), 0.1);
+}
+
+/* Category badges */
+.badge.bg-blue {
+    background-color: var(--tblr-blue);
+    color: #fff;
+}
+
+/* Empty state */
+.empty-img svg {
+    width: 64px;
+    height: 64px;
+    stroke-width: 1.5;
+}

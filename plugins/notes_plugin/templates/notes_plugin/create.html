@@ -1,0 +1,72 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Create Note{% endblock %}
+
+{% block page_title %}Create New Note{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="{{ url_for('notes_plugin.index') }}" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M9 14l-4 -4l4 -4"></path>
+            <path d="M5 10h11a4 4 0 1 1 0 8h-1"></path>
+        </svg>
+        Back to Notes
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row row-cards">
+    <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Create New Note</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('notes_plugin.create') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Title</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Content</label>
+                        <textarea name="content" class="form-control" rows="10" required></textarea>
+                    </div>
+                    
+                    {% if enable_categories %}
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <input type="text" name="category" class="form-control" placeholder="e.g. Work, Personal, Ideas">
+                        <div class="form-hint">Categorize your note for easier organization</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_pinned" class="form-check-input">
+                            <span class="form-check-label">Pin this note</span>
+                        </label>
+                        <div class="form-hint">Pinned notes appear at the top of your notes list</div>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <div class="row">
+                            <div class="col">
+                                <a href="{{ url_for('notes_plugin.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                            <div class="col text-end">
+                                <button type="submit" class="btn btn-primary">Save Note</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

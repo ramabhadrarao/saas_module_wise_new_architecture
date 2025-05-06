@@ -76,27 +76,34 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="d-flex mt-3">
-                                    <a href="{{ url_for('plugins.view', slug=plugin.slug) }}" class="btn btn-outline-primary me-2">Details</a>
-                                    {% if tenant and current_user.has_permission('install_plugin') %}
-                                    {% set installed = tenant_plugin_map.get(plugin.id, False) %}
-                                    {% if not installed %}
-                                    <form action="{{ url_for('plugins.enable', slug=plugin.slug) }}" method="post" class="ms-auto">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-primary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                                <path d="M12 5l0 14"></path>
-                                                <path d="M5 12l14 0"></path>
-                                            </svg>
-                                            Install
-                                        </button>
-                                    </form>
-                                    {% else %}
-                                    <a href="{{ url_for('plugins.view', slug=plugin.slug) }}" class="btn btn-outline-success ms-auto">Configure</a>
-                                    {% endif %}
-                                    {% endif %}
-                                </div>
+                                <!-- Update in the card body section -->
+        <div class="d-flex mt-3">
+            <a href="{{ url_for('plugins.view', slug=plugin.slug) }}" class="btn btn-outline-primary me-2">Details</a>
+            {% if tenant and current_user.has_permission('install_plugin') %}
+            {% set installed = tenant_plugin_map.get(plugin.id, False) %}
+            {% if not installed %}
+            <form action="{{ url_for('plugins.enable', slug=plugin.slug) }}" method="post" class="ms-auto">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Install
+                </button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('plugins.view', slug=plugin.slug) }}" class="btn btn-outline-success ms-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                </svg>
+                Installed - Configure
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
                             </div>
                         </div>
                     </div>

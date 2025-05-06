@@ -198,17 +198,7 @@ class PluginManager:
 
         logger.info(f"Discovered {len(discovered)} plugins")
         return discovered
-    # def activate_plugin(self, plugin_slug):
-    #     """Activate a plugin"""
-    #     plugin = self.plugins.get(plugin_slug)
-    #     if not plugin:
-    #         logger.error(f"Plugin {plugin_slug} not found")
-    #         return False
-        
-    #     plugin.status = PluginStatus.ACTIVE.value
-    #     db.session.commit()
-    #     logger.info(f"Activated plugin: {plugin.name}")
-    #     return True
+    
     def activate_plugin(self, plugin_slug):
         """Activate a plugin"""
         plugin = Plugin.query.filter_by(slug=plugin_slug).first()
@@ -226,6 +216,23 @@ class PluginManager:
                 logger.error(f"Failed to load plugin {plugin_slug}")
                 return False
             
+            # Initialize plugin instance and register its blueprint
+            instance = plugin_class()
+            
+            # Register blueprint if the plugin provides one
+            if hasattr(instance, 'get_blueprint'):
+                from flask import current_app
+                blueprint = instance.get_blueprint()
+                if blueprint:
+                    try:
+                        # Check if blueprint is already registered
+                        if blueprint.name not in current_app.blueprints:
+                            current_app.register_blueprint(blueprint)
+                            logger.info(f"Registered blueprint for plugin {plugin_slug}")
+                    except Exception as e:
+                        logger.error(f"Error registering blueprint for plugin {plugin_slug}: {str(e)}")
+                        return False
+            
             # Update status and immediately commit
             plugin.status = PluginStatus.ACTIVE.value
             db.session.commit()
@@ -235,7 +242,7 @@ class PluginManager:
             if plugin.status != PluginStatus.ACTIVE.value:
                 logger.error(f"Failed to update plugin status. Expected {PluginStatus.ACTIVE.value}, got {plugin.status}")
                 return False
-                
+                    
             logger.info(f"Activated plugin: {plugin.name}")
             self.plugins[plugin_slug] = plugin  # Update the cached plugin in the manager
             return True
@@ -252,6 +259,14 @@ class PluginManager:
             return False
         
         try:
+            # Unregister blueprint if possible
+            from flask import current_app
+            blueprint_name = f"{plugin_slug}_blueprint"
+            if blueprint_name in current_app.blueprints:
+                # Flask doesn't have a built-in way to unregister blueprints,
+                # but we can mark the plugin as inactive so it won't be used
+                logger.info(f"Marking blueprint {blueprint_name} as inactive")
+            
             plugin.status = PluginStatus.INACTIVE.value
             db.session.commit()
             
@@ -260,7 +275,7 @@ class PluginManager:
             if plugin.status != PluginStatus.INACTIVE.value:
                 logger.error(f"Failed to update plugin status. Expected {PluginStatus.INACTIVE.value}, got {plugin.status}")
                 return False
-                
+                    
             logger.info(f"Deactivated plugin: {plugin.name}")
             
             # Remove any instances
@@ -276,44 +291,7 @@ class PluginManager:
             logger.error(f"Error deactivating plugin {plugin_slug}: {str(e)}")
             return False
     
-    # def get_plugin_instance(self, plugin_slug, tenant_id=None):
-    #     """Get an instance of the plugin for a specific tenant"""
-    #     # Check if we already have an instance
-    #     instance_key = f"{plugin_slug}:{tenant_id}" if tenant_id else plugin_slug
-    #     if instance_key in self.plugin_instances:
-    #         return self.plugin_instances[instance_key]
-        
-    #     # Get the plugin
-    #     plugin = self.plugins.get(plugin_slug)
-    #     if not plugin or plugin.status != PluginStatus.ACTIVE.value:
-    #         logger.error(f"Plugin {plugin_slug} not found or not active")
-    #         return None
-        
-    #     # Load the plugin
-    #     plugin_class = plugin.load()
-    #     if not plugin_class:
-    #         return None
-        
-    #     # Get tenant-specific configuration if applicable
-    #     config = {}
-    #     if tenant_id:
-    #         tenant_plugin = TenantPlugin.query.filter_by(
-    #             tenant_id=tenant_id,
-    #             plugin_id=plugin.id,
-    #             enabled=True
-    #         ).first()
-            
-    #         if tenant_plugin:
-    #             config = tenant_plugin.config
-        
-    #     # Create an instance
-    #     try:
-    #         instance = plugin_class(config)
-    #         self.plugin_instances[instance_key] = instance
-    #         return instance
-    #     except Exception as e:
-    #         logger.error(f"Error instantiating plugin {plugin_slug}: {str(e)}")
-    #         return None
+    
     def get_plugin_instance(self, plugin_slug, tenant_id=None):
         """Get an instance of the plugin for a specific tenant"""
         # Check if we already have an instance
@@ -366,6 +344,7 @@ class PluginManager:
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
             return None
+
     def get_tenant_plugins(self, tenant_id):
         """Get all active plugins for a specific tenant"""
         # Get system-wide plugins that are enabled for all tenants
@@ -392,35 +371,26 @@ class PluginManager:
         
         return result
 
-def load_plugin_blueprints(self, app):
-    """Load blueprints for all active plugins"""
-    logger.info("Loading plugin blueprints")
-    
-    # Get all active plugins
-    active_plugins = Plugin.query.filter_by(status='active').all()
-    
-    for plugin in active_plugins:
-        logger.info(f"Loading blueprint for plugin {plugin.name}")
+    def load_plugin_blueprints(self, app):
+        """Load and register blueprints for all active plugins"""
         try:
-            # Get plugin instance
-            instance = self.get_plugin_instance(plugin.slug)
+            from app.plugins.plugin import Plugin, PluginStatus
             
-            if instance and hasattr(instance, 'get_blueprint'):
-                blueprint = instance.get_blueprint()
-                if blueprint:
-                    app.register_blueprint(blueprint)
-                    logger.info(f"Registered blueprint for plugin {plugin.name}")
-                else:
-                    logger.warning(f"Plugin {plugin.name} get_blueprint() returned None")
-            else:
-                logger.warning(f"Plugin {plugin.name} has no get_blueprint method")
+            # Get all active plugins
+            active_plugins = Plugin.query.filter_by(status=PluginStatus.ACTIVE.value).all()
             
+            for plugin in active_plugins:
+                # Get plugin instance
+                instance = self.get_plugin_instance(plugin.slug)
+                
+                if instance and hasattr(instance, 'get_blueprint'):
+                    blueprint = instance.get_blueprint()
+                    
+                    if blueprint and blueprint.name not in app.blueprints:
+                        app.register_blueprint(blueprint)
+                        app.logger.info(f"Registered blueprint for plugin {plugin.slug}")
         except Exception as e:
-            logger.error(f"Error loading blueprint for plugin {plugin.name}: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
-    
-    logger.info("Finished loading plugin blueprints")
+            app.logger.error(f"Error loading plugin blueprints: {str(e)}")
 
 def get_tenant_plugin_menu_items(self, tenant_id):
     """Get menu items for all active plugins for a tenant"""

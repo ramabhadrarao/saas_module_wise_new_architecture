@@ -88,6 +88,142 @@ def create_app():
         return {'plugin_menu_items': plugin_menu_items}
     
     # Add authentication middleware
+    # Add to create_app() function after other context processors
+    @app.context_processor
+    def inject_plugin_context():
+        """Inject plugin-related data into templates"""
+        def get_tenant_active_plugins(tenant_id=None):
+            if not tenant_id:
+                return []
+            
+            try:
+                from app.plugins.plugin_manager import PluginManager
+                from app.plugins.tenant_plugin import TenantPlugin
+                from app.plugins.plugin import Plugin, PluginStatus
+                
+                # Get tenant-specific plugins
+                tenant_plugins = TenantPlugin.query.filter_by(
+                    tenant_id=tenant_id,
+                    enabled=True
+                ).join(Plugin).filter(
+                    Plugin.status == PluginStatus.ACTIVE.value
+                ).all()
+                
+                # Get plugins enabled for all tenants
+                global_plugins = Plugin.query.filter_by(
+                    status=PluginStatus.ACTIVE.value,
+                    enabled_for_all=True
+                ).all()
+                
+                # Combine (avoiding duplicates)
+                plugin_manager = PluginManager()
+                results = []
+                plugin_ids = set()
+                
+                # Process tenant-specific plugins
+                for tp in tenant_plugins:
+                    if tp.plugin_id not in plugin_ids:
+                        plugin_ids.add(tp.plugin_id)
+                        instance = plugin_manager.get_plugin_instance(tp.plugin.slug, tenant_id)
+                        
+                        if instance and hasattr(instance, 'get_menu_items'):
+                            menu_items = instance.get_menu_items()
+                            results.append({
+                                'id': tp.plugin.id,
+                                'name': tp.plugin.name,
+                                'slug': tp.plugin.slug,
+                                'menu_items': menu_items
+                            })
+                
+                # Process global plugins
+                for plugin in global_plugins:
+                    if plugin.id not in plugin_ids:
+                        instance = plugin_manager.get_plugin_instance(plugin.slug)
+                        
+                        if instance and hasattr(instance, 'get_menu_items'):
+                            menu_items = instance.get_menu_items()
+                            results.append({
+                                'id': plugin.id,
+                                'name': plugin.name,
+                                'slug': plugin.slug,
+                                'menu_items': menu_items
+                            })
+                
+                return results
+            except Exception as e:
+                app.logger.error(f"Error fetching tenant plugins: {str(e)}")
+                return []
+        
+        return {
+            'get_tenant_active_plugins': get_tenant_active_plugins
+        }
+    @app.context_processor
+    def inject_plugin_data():
+        """Inject plugin data for templates"""
+        def get_tenant_active_plugins(tenant_id=None):
+            """Get active plugins for a tenant with their menu items"""
+            if not tenant_id:
+                return []
+            
+            try:
+                from app.plugins.plugin_manager import PluginManager
+                from app.tenant.tenant import Tenant
+                from app.tenant.middleware import get_current_tenant
+                from app.plugins.tenant_plugin import TenantPlugin
+                from app.plugins.plugin import Plugin, PluginStatus
+                
+                # Get tenant plugins
+                tenant_plugins = TenantPlugin.query.filter_by(
+                    tenant_id=tenant_id,
+                    enabled=True
+                ).join(Plugin).filter(
+                    Plugin.status == PluginStatus.ACTIVE.value
+                ).all()
+                
+                # Get global plugins
+                global_plugins = Plugin.query.filter_by(
+                    status=PluginStatus.ACTIVE.value,
+                    enabled_for_all=True
+                ).all()
+                
+                # Combine them (avoiding duplicates)
+                plugin_manager = PluginManager()
+                result = []
+                
+                # Process tenant-specific plugins
+                for tp in tenant_plugins:
+                    instance = plugin_manager.get_plugin_instance(tp.plugin.slug, tenant_id)
+                    if instance and hasattr(instance, 'get_menu_items'):
+                        menu_items = instance.get_menu_items()
+                        result.append({
+                            'id': tp.plugin.id,
+                            'name': tp.plugin.name,
+                            'slug': tp.plugin.slug,
+                            'menu_items': menu_items
+                        })
+                
+                # Process global plugins (if not already added)
+                plugin_slugs = {p['slug'] for p in result}
+                for plugin in global_plugins:
+                    if plugin.slug not in plugin_slugs:
+                        instance = plugin_manager.get_plugin_instance(plugin.slug)
+                        if instance and hasattr(instance, 'get_menu_items'):
+                            menu_items = instance.get_menu_items()
+                            result.append({
+                                'id': plugin.id,
+                                'name': plugin.name,
+                                'slug': plugin.slug,
+                                'menu_items': menu_items
+                            })
+                
+                return result
+            except Exception as e:
+                current_app.logger.error(f"Error fetching tenant plugins: {str(e)}")
+                return []
+        
+        return {
+            'get_tenant_active_plugins': get_tenant_active_plugins
+        }
     @app.before_request
     def require_login():
         # Public routes that don't require authentication
@@ -188,18 +324,20 @@ def create_app():
             inspector = inspect(db.engine)
             if 'plugins' in inspector.get_table_names():
                 plugin_manager = PluginManager()
+                # Register plugin blueprints
+                plugin_manager.load_plugin_blueprints(app)
                 app.logger.info("Plugin manager initialized successfully")
             else:
                 app.logger.info("Plugins table not yet created - skipping plugin manager initialization")
         except Exception as e:
             app.logger.error(f"Error initializing plugin manager: {str(e)}")
-        try:
-            from app.plugins.plugin_manager import PluginManager
-            plugin_manager = PluginManager()
-            plugin_manager.load_plugin_blueprints(app)
-            app.logger.info("Plugin manager initialized and blueprints loaded")
-        except Exception as e:
-            app.logger.error(f"Error initializing plugin manager: {str(e)}")
+        # try:
+        #     from app.plugins.plugin_manager import PluginManager
+        #     plugin_manager = PluginManager()
+        #     plugin_manager.load_plugin_blueprints(app)
+        #     app.logger.info("Plugin manager initialized and blueprints loaded")
+        # except Exception as e:
+        #     app.logger.error(f"Error initializing plugin manager: {str(e)}")
     
     return app
 

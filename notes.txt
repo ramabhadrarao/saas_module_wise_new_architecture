@@ -32,3 +32,20 @@ Add user management links to the sidebar:
 After implementing the Authentication & Authorization module, run migrations to create the user and role tables:
 flask db migrate -m "Add auth module"
 flask db upgrade
+
+
+
+
+How to Install and Use the Plugin
+
+Place the entire notes_plugin directory in your application's plugins directory.
+Use the CLI command to discover and register the plugin:
+flask plugins discover
+
+Activate the plugin through the admin interface or CLI:
+flask plugins activate notes
+
+Enable the plugin for specific tenants through the admin interface or CLI:
+flask plugins enable-for-tenant notes your-tenant-slug
+
+Configure the plugin settings (max_notes_per_user, enable_sharing, enable_categories) through the tenant's plugin configuration page.
