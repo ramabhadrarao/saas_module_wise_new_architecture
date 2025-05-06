@@ -51,6 +51,41 @@ def create_app():
     @app.context_processor
     def inject_now():
         return {'now': datetime.datetime.now()}
+    # Add a context processor for plugin menu items
+    # Add context processor for plugin menu items
+    @app.context_processor
+    def inject_plugin_menu_items():
+        """Inject plugin menu items into all templates"""
+        from app.tenant.middleware import get_current_tenant
+        from flask_login import current_user
+        
+        tenant = get_current_tenant()
+        plugin_menu_items = []
+        
+        if tenant and current_user.is_authenticated:
+            try:
+                # Get active plugins for this tenant
+                from app.plugins.plugin_manager import PluginManager
+                plugin_manager = PluginManager()
+                
+                # Get menu items from each plugin
+                plugins = plugin_manager.get_tenant_plugins(tenant.id)
+                
+                for plugin in plugins:
+                    instance = plugin_manager.get_plugin_instance(plugin.slug, tenant.id)
+                    if instance and hasattr(instance, 'get_menu_items'):
+                        try:
+                            items = instance.get_menu_items()
+                            if items:
+                                plugin_menu_items.extend(items)
+                        except Exception as e:
+                            app.logger.error(f"Error getting menu items for plugin {plugin.slug}: {str(e)}")
+            except Exception as e:
+                app.logger.error(f"Error getting plugin menu items: {str(e)}")
+                import traceback
+                app.logger.error(traceback.format_exc())
+        
+        return {'plugin_menu_items': plugin_menu_items}
     
     # Add authentication middleware
     @app.before_request
@@ -156,6 +191,13 @@ def create_app():
                 app.logger.info("Plugin manager initialized successfully")
             else:
                 app.logger.info("Plugins table not yet created - skipping plugin manager initialization")
+        except Exception as e:
+            app.logger.error(f"Error initializing plugin manager: {str(e)}")
+        try:
+            from app.plugins.plugin_manager import PluginManager
+            plugin_manager = PluginManager()
+            plugin_manager.load_plugin_blueprints(app)
+            app.logger.info("Plugin manager initialized and blueprints loaded")
         except Exception as e:
             app.logger.error(f"Error initializing plugin manager: {str(e)}")
     

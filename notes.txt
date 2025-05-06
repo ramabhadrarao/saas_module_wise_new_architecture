@@ -1,0 +1,34 @@
+pip install Flask-Login
+pip install PyJWT
+pip install bcrypt
+pip install email-validator
+
+# In the Flask shell
+from app.auth.user import User, Role
+from app import db
+
+# Create admin user
+admin = User.create_user(
+    email="ramabhadrarao.maddu@gmail.com",
+    username="admin",
+    password="Nihita@123",
+    is_tenant_admin=True,
+    is_system_admin=True
+)
+
+# Assign admin role
+admin_role = Role.query.filter_by(name="Admin").first()
+admin.roles.append(admin_role)
+db.session.commit()
+
+
+Integration with the Core Module
+1. Update app/init.py to initialize Flask-Login
+2. Update the layout files to include login state
+Update app/templates/layout/base.html to include login information in the header:
+3. Update the sidebar in app/templates/layout/sidebar.html
+Add user management links to the sidebar:
+4. Run Migrations
+After implementing the Authentication & Authorization module, run migrations to create the user and role tables:
+flask db migrate -m "Add auth module"
+flask db upgrade

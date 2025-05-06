@@ -95,6 +95,93 @@
     </div>
 </li>
 {% endif %}
+<!-- Plugin menu items -->
+{% if plugin_menu_items %}
+<li class="nav-item">
+    <a class="nav-link dropdown-toggle" href="#navbar-plugins" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+        <span class="nav-link-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+                <path d="M12 3c-.866 0 -1.5 .397 -1.5 .866v1.268l-3.092 -1.634c-.745 -.394 -1.3 0 -1.3 .874v3.25c0 .876 .555 1.27 1.3 .874l3.092 -1.634v1.268c0 .47 .634 .866 1.5 .866c.866 0 1.5 -.397 1.5 -.866v-1.268l3.092 1.634c.745 .394 1.3 0 1.3 -.874v-3.25c0 -.876 -.555 -1.27 -1.3 -.874l-3.092 1.634v-1.268c0 -.47 -.634 -.866 -1.5 -.866z"></path>
+            </svg>
+        </span>
+        <span class="nav-link-title">
+            Installed Plugins
+        </span>
+    </a>
+    <div class="dropdown-menu">
+        {% for item in plugin_menu_items %}
+            {% if not current_user.has_permission or current_user.has_permission(item.permission|default('view_plugins')) %}
+            <a class="dropdown-item" href="{{ item.url }}">
+                {{ item.name }}
+            </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+</li>
+{% endif %}
+
+
+
+<!-- Plugin menu items -->
+{% if plugin_menu_items %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#navbar-plugins-menu" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+        <span class="nav-link-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+                <path d="M12 3c-.866 0 -1.5 .397 -1.5 .866v1.268l-3.092 -1.634c-.745 -.394 -1.3 0 -1.3 .874v3.25c0 .876 .555 1.27 1.3 .874l3.092 -1.634v1.268c0 .47 .634 .866 1.5 .866c.866 0 1.5 -.397 1.5 -.866v-1.268l3.092 1.634c.745 .394 1.3 0 1.3 -.874v-3.25c0 -.876 -.555 -1.27 -1.3 -.874l-3.092 1.634v-1.268c0 -.47 -.634 -.866 -1.5 -.866z"></path>
+            </svg>
+        </span>
+        <span class="nav-link-title">
+            Plugins
+        </span>
+    </a>
+    <div class="dropdown-menu">
+        {% for item in plugin_menu_items %}
+            {% if current_user.has_permission(item.permission)|default(true) %}
+            <a class="dropdown-item" href="{{ item.url }}">
+                {% if item.icon %}
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="{{ item.icon_path|default('M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0') }}"></path>
+                    </svg>
+                </span>
+                {% endif %}
+                {{ item.name }}
+            </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+</li>
+{% endif %}
+
+<!-- Individual plugin direct menu items -->
+{% for item in plugin_menu_items %}
+    {% if current_user.has_permission(item.permission)|default(true) and item.show_in_main_menu|default(false) %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ item.url }}">
+            <span class="nav-link-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="{{ item.icon_path|default('M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0') }}"></path>
+                </svg>
+            </span>
+            <span class="nav-link-title">
+                {{ item.name }}
+            </span>
+        </a>
+    </li>
+    {% endif %}
+{% endfor %}
+
+
+
+
+
             </ul>
         </div>
     </div>

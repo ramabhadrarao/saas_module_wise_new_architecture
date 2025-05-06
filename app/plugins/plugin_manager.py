@@ -391,3 +391,53 @@ class PluginManager:
                 result.append(tp.plugin)
         
         return result
+
+def load_plugin_blueprints(self, app):
+    """Load blueprints for all active plugins"""
+    logger.info("Loading plugin blueprints")
+    
+    # Get all active plugins
+    active_plugins = Plugin.query.filter_by(status='active').all()
+    
+    for plugin in active_plugins:
+        logger.info(f"Loading blueprint for plugin {plugin.name}")
+        try:
+            # Get plugin instance
+            instance = self.get_plugin_instance(plugin.slug)
+            
+            if instance and hasattr(instance, 'get_blueprint'):
+                blueprint = instance.get_blueprint()
+                if blueprint:
+                    app.register_blueprint(blueprint)
+                    logger.info(f"Registered blueprint for plugin {plugin.name}")
+                else:
+                    logger.warning(f"Plugin {plugin.name} get_blueprint() returned None")
+            else:
+                logger.warning(f"Plugin {plugin.name} has no get_blueprint method")
+            
+        except Exception as e:
+            logger.error(f"Error loading blueprint for plugin {plugin.name}: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+    
+    logger.info("Finished loading plugin blueprints")
+
+def get_tenant_plugin_menu_items(self, tenant_id):
+    """Get menu items for all active plugins for a tenant"""
+    menu_items = []
+    
+    # Get all active plugins for this tenant
+    plugins = self.get_tenant_plugins(tenant_id)
+    
+    for plugin in plugins:
+        # Get plugin instance
+        instance = self.get_plugin_instance(plugin.slug, tenant_id)
+        if instance and hasattr(instance, 'get_menu_items'):
+            try:
+                items = instance.get_menu_items()
+                if items:
+                    menu_items.extend(items)
+            except Exception as e:
+                logger.error(f"Error getting menu items for plugin {plugin.slug}: {str(e)}")
+    
+    return menu_items

@@ -1,0 +1,7 @@
+wsl --->windows ip forwarding 
+
+
+PS C:\Windows\system32> netsh interface portproxy add v4tov4 listenport=5000 listenaddress=0.0.0.0 connectport=5000 connectaddress=172.20.148.225
+
+PS C:\Windows\system32> netsh advfirewall firewall add rule name="WSL2 Flask Port 5000" dir=in action=allow protocol=TCP localport=5000
+Ok.
