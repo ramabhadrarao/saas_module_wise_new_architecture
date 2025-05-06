@@ -39,10 +39,11 @@ class NotesPlugin:
         )
         
         @bp.route('/')
-        @login_required
-        @tenant_required
+        # @login_required
+        # @tenant_required
         def index():
             """Notes dashboard"""
+            # Get the current tenant and user
             tenant = get_current_tenant()
             category = request.args.get('category')
             include_archived = request.args.get('archived', 'false') == 'true'
@@ -71,8 +72,8 @@ class NotesPlugin:
             )
         
         @bp.route('/create', methods=['GET', 'POST'])
-        @login_required
-        @tenant_required
+        # @login_required
+        # @tenant_required
         def create():
             """Create a new note"""
             tenant = get_current_tenant()
@@ -114,8 +115,8 @@ class NotesPlugin:
             )
         
         @bp.route('/<int:note_id>', methods=['GET'])
-        @login_required
-        @tenant_required
+        # @login_required
+        # @tenant_required
         def view(note_id):
             """View a note"""
             tenant = get_current_tenant()
@@ -132,8 +133,8 @@ class NotesPlugin:
             return render_template('notes_plugin/view.html', note=note)
         
         @bp.route('/<int:note_id>/edit', methods=['GET', 'POST'])
-        @login_required
-        @tenant_required
+        # @login_required
+        # @tenant_required
         def edit(note_id):
             """Edit a note"""
             tenant = get_current_tenant()
@@ -168,8 +169,8 @@ class NotesPlugin:
             )
         
         @bp.route('/<int:note_id>/pin', methods=['POST'])
-        @login_required
-        @tenant_required
+        # @login_required
+        # @tenant_required
         def toggle_pin(note_id):
             """Toggle pin status of a note"""
             tenant = get_current_tenant()
@@ -190,8 +191,8 @@ class NotesPlugin:
             return redirect(url_for('notes_plugin.index'))
         
         @bp.route('/<int:note_id>/archive', methods=['POST'])
-        @login_required
-        @tenant_required
+        # @login_required
+        # @tenant_required
         def toggle_archive(note_id):
             """Toggle archive status of a note"""
             tenant = get_current_tenant()
@@ -212,8 +213,8 @@ class NotesPlugin:
             return redirect(url_for('notes_plugin.index'))
         
         @bp.route('/<int:note_id>/delete', methods=['POST'])
-        @login_required
-        @tenant_required
+        # @login_required
+        # @tenant_required
         def delete(note_id):
             """Delete a note"""
             tenant = get_current_tenant()

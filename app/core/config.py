@@ -20,6 +20,11 @@ class Config:
     
     # Logging
     LOG_LEVEL = 'INFO'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = False  # True if using HTTPS
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_SECURE = False
+
     
     @staticmethod
     def init_app(app):
